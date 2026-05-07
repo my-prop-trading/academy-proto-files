@@ -1,0 +1,72 @@
+syntax = "proto3";
+package academy_users;
+import "google/protobuf/empty.proto";
+
+message AcademyUserGrpcModel {
+  string Id = 1;
+  string Email = 2;
+  bool HasPassword = 3;
+  int64 CreatedAt = 4;
+  int64 UpdatedAt = 5;
+}
+
+message CreateUserIfNotExistsRequest {
+  string Email = 1;
+}
+
+message CreateUserIfNotExistsResponse {
+  AcademyUserGrpcModel User = 1;
+  bool Created = 2;
+}
+
+enum SetPasswordStatusGrpc {
+  SET_PASSWORD_OK = 0;
+  SET_PASSWORD_USER_NOT_FOUND = 1;
+  SET_PASSWORD_ALREADY_SET = 2;
+}
+
+message SetPasswordRequest {
+  string UserId = 1;
+  string Password = 2;
+}
+
+message SetPasswordResponse {
+  SetPasswordStatusGrpc Status = 1;
+}
+
+enum VerifyPasswordStatusGrpc {
+  VERIFY_OK = 0;
+  VERIFY_INVALID_CREDENTIALS = 1;
+  VERIFY_PASSWORD_NOT_SET = 2;
+}
+
+message VerifyPasswordRequest {
+  string Email = 1;
+  string Password = 2;
+}
+
+message VerifyPasswordResponse {
+  VerifyPasswordStatusGrpc Status = 1;
+  optional string UserId = 2;
+}
+
+message GetUserByEmailRequest {
+  string Email = 1;
+}
+
+message GetUserByIdRequest {
+  string Id = 1;
+}
+
+message GetUserResponse {
+  optional AcademyUserGrpcModel User = 1;
+}
+
+service AcademyUsersGrpcService {
+  rpc CreateUserIfNotExists(CreateUserIfNotExistsRequest) returns (CreateUserIfNotExistsResponse);
+  rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
+  rpc VerifyPassword(VerifyPasswordRequest) returns (VerifyPasswordResponse);
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserResponse);
+  rpc GetUserById(GetUserByIdRequest) returns (GetUserResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
