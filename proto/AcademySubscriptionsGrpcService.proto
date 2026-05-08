@@ -11,7 +11,7 @@ enum AcademySubscriptionStatusGrpc {
 
 message AcademySubscriptionGrpcModel {
   string Id = 1;
-  string UserId = 2;
+  string ClientId = 2;
   string ExternalId = 3;
   AcademySubscriptionStatusGrpc Status = 4;
   string ProductCode = 5;
@@ -22,8 +22,8 @@ message AcademySubscriptionGrpcModel {
   int64 UpdatedAt = 10;
 }
 
-message GetByUserIdRequest {
-  string UserId = 1;
+message GetByClientIdRequest {
+  string ClientId = 1;
 }
 
 message GetSubscriptionResponse {
@@ -31,6 +31,6 @@ message GetSubscriptionResponse {
 }
 
 service AcademySubscriptionsGrpcService {
-  rpc GetByUserId(GetByUserIdRequest) returns (GetSubscriptionResponse);
+  rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
