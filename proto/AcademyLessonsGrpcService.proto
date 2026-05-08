@@ -1,0 +1,40 @@
+syntax = "proto3";
+package academy_lessons;
+import "google/protobuf/empty.proto";
+
+message AcademyLessonProgressGrpcModel {
+  string ClientId = 1;
+  string LessonId = 2;
+  map<string, string> Answers = 3;
+  int64 CompletedAt = 4;
+}
+
+message MarkLessonCompletedRequest {
+  string ClientId = 1;
+  string LessonId = 2;
+  map<string, string> Answers = 3;
+}
+
+message GetCompletedLessonsRequest {
+  string ClientId = 1;
+}
+
+message GetCompletedLessonsResponse {
+  repeated string LessonIds = 1;
+}
+
+message GetLessonProgressRequest {
+  string ClientId = 1;
+  string LessonId = 2;
+}
+
+message GetLessonProgressResponse {
+  optional AcademyLessonProgressGrpcModel Progress = 1;
+}
+
+service AcademyLessonsGrpcService {
+  rpc MarkLessonCompleted(MarkLessonCompletedRequest) returns (google.protobuf.Empty);
+  rpc GetCompletedLessons(GetCompletedLessonsRequest) returns (GetCompletedLessonsResponse);
+  rpc GetLessonProgress(GetLessonProgressRequest) returns (GetLessonProgressResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
