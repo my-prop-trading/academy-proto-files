@@ -12,7 +12,7 @@ enum AcademySubscriptionStatusGrpc {
 message AcademySubscriptionGrpcModel {
   string Id = 1;
   string UserId = 2;
-  string BillerixSubscriptionId = 3;
+  string ExternalId = 3;
   AcademySubscriptionStatusGrpc Status = 4;
   string ProductCode = 5;
   int64 StartedAt = 6;
