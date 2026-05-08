@@ -1,0 +1,45 @@
+syntax = "proto3";
+package academy_subscriptions;
+import "google/protobuf/empty.proto";
+
+enum AcademySubscriptionStatusGrpc {
+  ACTIVE = 0;
+  SUSPENDED = 1;
+  CANCELLED = 2;
+  BLOCKED = 3;
+}
+
+message AcademySubscriptionGrpcModel {
+  string Id = 1;
+  string UserId = 2;
+  string BillerixSubscriptionId = 3;
+  AcademySubscriptionStatusGrpc Status = 4;
+  string ProductCode = 5;
+  int64 StartedAt = 6;
+  optional int64 ExpiresAt = 7;
+  optional int64 CancelledAt = 8;
+  int64 CreatedAt = 9;
+  int64 UpdatedAt = 10;
+}
+
+message GetByUserIdRequest {
+  string UserId = 1;
+}
+
+message GetSubscriptionResponse {
+  optional AcademySubscriptionGrpcModel Subscription = 1;
+}
+
+message IsActiveForUserRequest {
+  string UserId = 1;
+}
+
+message IsActiveForUserResponse {
+  bool IsActive = 1;
+}
+
+service AcademySubscriptionsGrpcService {
+  rpc GetByUserId(GetByUserIdRequest) returns (GetSubscriptionResponse);
+  rpc IsActiveForUser(IsActiveForUserRequest) returns (IsActiveForUserResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
