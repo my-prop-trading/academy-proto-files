@@ -30,16 +30,7 @@ message GetSubscriptionResponse {
   optional AcademySubscriptionGrpcModel Subscription = 1;
 }
 
-message IsActiveForUserRequest {
-  string UserId = 1;
-}
-
-message IsActiveForUserResponse {
-  bool IsActive = 1;
-}
-
 service AcademySubscriptionsGrpcService {
   rpc GetByUserId(GetByUserIdRequest) returns (GetSubscriptionResponse);
-  rpc IsActiveForUser(IsActiveForUserRequest) returns (IsActiveForUserResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
