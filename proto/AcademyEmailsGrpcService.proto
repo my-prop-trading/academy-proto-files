@@ -1,0 +1,12 @@
+syntax = "proto3";
+package academy_emails;
+import "google/protobuf/empty.proto";
+
+message SendForgotPasswordRequest {
+  string Email = 1;
+}
+
+service AcademyEmailsGrpcService {
+  rpc SendForgotPassword(SendForgotPasswordRequest) returns (google.protobuf.Empty);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

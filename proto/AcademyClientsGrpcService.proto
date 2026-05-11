@@ -62,11 +62,46 @@ message GetClientResponse {
   optional AcademyClientGrpcModel Client = 1;
 }
 
+enum GenerateResetCodeStatusGrpc {
+  GENERATE_RESET_CODE_OK = 0;
+  GENERATE_RESET_CODE_CLIENT_NOT_FOUND = 1;
+}
+
+message GenerateResetCodeRequest {
+  string Email = 1;
+}
+
+message GenerateResetCodeResponse {
+  GenerateResetCodeStatusGrpc Status = 1;
+  optional string ClientId = 2;
+  optional string Code = 3;
+  optional int64 ExpiresAt = 4;
+}
+
+enum ResetPasswordWithCodeStatusGrpc {
+  RESET_PASSWORD_OK = 0;
+  RESET_PASSWORD_CLIENT_NOT_FOUND = 1;
+  RESET_PASSWORD_INVALID_CODE = 2;
+  RESET_PASSWORD_EXPIRED = 3;
+}
+
+message ResetPasswordWithCodeRequest {
+  string Email = 1;
+  string Code = 2;
+  string NewPassword = 3;
+}
+
+message ResetPasswordWithCodeResponse {
+  ResetPasswordWithCodeStatusGrpc Status = 1;
+}
+
 service AcademyClientsGrpcService {
   rpc CreateClientIfNotExists(CreateClientIfNotExistsRequest) returns (CreateClientIfNotExistsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
   rpc VerifyPassword(VerifyPasswordRequest) returns (VerifyPasswordResponse);
   rpc GetClientByEmail(GetClientByEmailRequest) returns (GetClientResponse);
   rpc GetClientById(GetClientByIdRequest) returns (GetClientResponse);
+  rpc GenerateResetCode(GenerateResetCodeRequest) returns (GenerateResetCodeResponse);
+  rpc ResetPasswordWithCode(ResetPasswordWithCodeRequest) returns (ResetPasswordWithCodeResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
