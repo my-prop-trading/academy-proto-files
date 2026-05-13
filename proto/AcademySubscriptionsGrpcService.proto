@@ -20,6 +20,7 @@ message AcademySubscriptionGrpcModel {
   optional int64 CancelledAt = 8;
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
+  optional string ExternalBuyerId = 11;
 }
 
 message GetByClientIdRequest {
@@ -30,7 +31,24 @@ message GetSubscriptionResponse {
   optional AcademySubscriptionGrpcModel Subscription = 1;
 }
 
+enum CancelSubscriptionStatusGrpc {
+  CANCEL_OK = 0;
+  CANCEL_NOT_FOUND = 1;
+  CANCEL_NO_BUYER = 2;
+  CANCEL_NOT_ACTIVE = 3;
+}
+
+message CancelSubscriptionRequest {
+  string ClientId = 1;
+  string Ip = 2;
+}
+
+message CancelSubscriptionResponse {
+  CancelSubscriptionStatusGrpc Status = 1;
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
