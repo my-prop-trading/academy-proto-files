@@ -50,8 +50,9 @@ message CancelSubscriptionResponse {
 message CreateSubscriptionRequest {
   string ClientId = 1;
   string ProductCode = 2;
-  optional int64 ExpiresAt = 3;
+  string ExternalSubscriptionId = 3;
   optional string ExternalBuyerId = 4;
+  optional int64 ExpiresAt = 5;
 }
 
 message CreateSubscriptionResponse {
