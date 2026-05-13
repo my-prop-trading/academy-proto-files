@@ -47,8 +47,20 @@ message CancelSubscriptionResponse {
   CancelSubscriptionStatusGrpc Status = 1;
 }
 
+message CreateTestSubscriptionRequest {
+  string ClientId = 1;
+  string ProductCode = 2;
+  optional int64 ExpiresAt = 3;
+  optional string ExternalBuyerId = 4;
+}
+
+message CreateTestSubscriptionResponse {
+  AcademySubscriptionGrpcModel Subscription = 1;
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
+  rpc CreateTestSubscription(CreateTestSubscriptionRequest) returns (CreateTestSubscriptionResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
