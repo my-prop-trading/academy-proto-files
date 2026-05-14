@@ -63,6 +63,9 @@ message ListSubscriptionsRequest {
   int32 Limit = 1;
   int32 Offset = 2;
   optional AcademySubscriptionStatusGrpc Status = 3;
+  optional string Id = 4;
+  optional string ClientId = 5;
+  optional string ExternalId = 6;
 }
 
 message ListSubscriptionsResponse {
