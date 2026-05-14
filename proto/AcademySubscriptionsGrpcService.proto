@@ -59,9 +59,21 @@ message CreateSubscriptionResponse {
   AcademySubscriptionGrpcModel Subscription = 1;
 }
 
+message ListSubscriptionsRequest {
+  int32 Limit = 1;
+  int32 Offset = 2;
+  optional AcademySubscriptionStatusGrpc Status = 3;
+}
+
+message ListSubscriptionsResponse {
+  repeated AcademySubscriptionGrpcModel Subscriptions = 1;
+  int64 Total = 2;
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
   rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

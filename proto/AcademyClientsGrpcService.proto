@@ -95,12 +95,33 @@ message ResetPasswordWithCodeResponse {
   ResetPasswordWithCodeStatusGrpc Status = 1;
 }
 
+message ListClientsRequest {
+  int32 Limit = 1;
+  int32 Offset = 2;
+  optional string EmailQuery = 3;
+}
+
+message ListClientsResponse {
+  repeated AcademyClientGrpcModel Clients = 1;
+  int64 Total = 2;
+}
+
+message GetClientsByIdsRequest {
+  repeated string Ids = 1;
+}
+
+message GetClientsByIdsResponse {
+  repeated AcademyClientGrpcModel Clients = 1;
+}
+
 service AcademyClientsGrpcService {
   rpc CreateClientIfNotExists(CreateClientIfNotExistsRequest) returns (CreateClientIfNotExistsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
   rpc VerifyPassword(VerifyPasswordRequest) returns (VerifyPasswordResponse);
   rpc GetClientByEmail(GetClientByEmailRequest) returns (GetClientResponse);
   rpc GetClientById(GetClientByIdRequest) returns (GetClientResponse);
+  rpc GetClientsByIds(GetClientsByIdsRequest) returns (GetClientsByIdsResponse);
+  rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
   rpc GenerateResetCode(GenerateResetCodeRequest) returns (GenerateResetCodeResponse);
   rpc ResetPasswordWithCode(ResetPasswordWithCodeRequest) returns (ResetPasswordWithCodeResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
