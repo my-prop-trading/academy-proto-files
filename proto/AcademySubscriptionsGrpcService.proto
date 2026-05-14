@@ -72,10 +72,19 @@ message ListSubscriptionsResponse {
   repeated AcademySubscriptionGrpcModel Subscriptions = 1;
 }
 
+message GetSubscriptionsStatsResponse {
+  int64 Total = 1;
+  int64 Active = 2;
+  int64 Suspended = 3;
+  int64 Cancelled = 4;
+  int64 Blocked = 5;
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
   rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
+  rpc GetSubscriptionsStats(google.protobuf.Empty) returns (GetSubscriptionsStatsResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

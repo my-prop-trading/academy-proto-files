@@ -113,6 +113,10 @@ message GetClientsByIdsResponse {
   repeated AcademyClientGrpcModel Clients = 1;
 }
 
+message GetClientsCountResponse {
+  int64 Total = 1;
+}
+
 service AcademyClientsGrpcService {
   rpc CreateClientIfNotExists(CreateClientIfNotExistsRequest) returns (CreateClientIfNotExistsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
@@ -121,6 +125,7 @@ service AcademyClientsGrpcService {
   rpc GetClientById(GetClientByIdRequest) returns (GetClientResponse);
   rpc GetClientsByIds(GetClientsByIdsRequest) returns (GetClientsByIdsResponse);
   rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
+  rpc GetClientsCount(google.protobuf.Empty) returns (GetClientsCountResponse);
   rpc GenerateResetCode(GenerateResetCodeRequest) returns (GenerateResetCodeResponse);
   rpc ResetPasswordWithCode(ResetPasswordWithCodeRequest) returns (ResetPasswordWithCodeResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
