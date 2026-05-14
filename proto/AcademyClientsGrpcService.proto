@@ -103,7 +103,6 @@ message ListClientsRequest {
 
 message ListClientsResponse {
   repeated AcademyClientGrpcModel Clients = 1;
-  int64 Total = 2;
 }
 
 message GetClientsByIdsRequest {
