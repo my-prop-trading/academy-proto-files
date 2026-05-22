@@ -80,11 +80,28 @@ message GetSubscriptionsStatsResponse {
   int64 Blocked = 5;
 }
 
+enum UpdateSubscriptionDatesStatusGrpc {
+  UPDATE_DATES_OK = 0;
+  UPDATE_DATES_NOT_FOUND = 1;
+}
+
+message UpdateSubscriptionDatesRequest {
+  string Id = 1;
+  optional int64 StartedAt = 2;
+  optional int64 ExpiresAt = 3;
+}
+
+message UpdateSubscriptionDatesResponse {
+  UpdateSubscriptionDatesStatusGrpc Status = 1;
+  optional AcademySubscriptionGrpcModel Subscription = 2;
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
   rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
   rpc GetSubscriptionsStats(google.protobuf.Empty) returns (GetSubscriptionsStatsResponse);
+  rpc UpdateSubscriptionDates(UpdateSubscriptionDatesRequest) returns (UpdateSubscriptionDatesResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
