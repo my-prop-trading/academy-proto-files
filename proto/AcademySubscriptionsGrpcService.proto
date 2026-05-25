@@ -96,6 +96,33 @@ message UpdateSubscriptionDatesResponse {
   optional AcademySubscriptionGrpcModel Subscription = 2;
 }
 
+enum UpdateSubscriptionStatusGrpc {
+  UPDATE_OK = 0;
+  UPDATE_NOT_FOUND = 1;
+}
+
+// Partial update. None field = keep current value.
+// For optional/nullable fields (ExpiresAt, CancelledAt, ExternalBuyerId) use
+// the matching Clear* bool to explicitly set the field to null.
+message UpdateSubscriptionRequest {
+  string Id = 1;
+  optional AcademySubscriptionStatusGrpc Status = 2;
+  optional string ProductCode = 3;
+  optional string ExternalId = 4;
+  optional string ExternalBuyerId = 5;
+  bool ClearExternalBuyerId = 6;
+  optional int64 StartedAt = 7;
+  optional int64 ExpiresAt = 8;
+  bool ClearExpiresAt = 9;
+  optional int64 CancelledAt = 10;
+  bool ClearCancelledAt = 11;
+}
+
+message UpdateSubscriptionResponse {
+  UpdateSubscriptionStatusGrpc Status = 1;
+  optional AcademySubscriptionGrpcModel Subscription = 2;
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
@@ -103,5 +130,6 @@ service AcademySubscriptionsGrpcService {
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
   rpc GetSubscriptionsStats(google.protobuf.Empty) returns (GetSubscriptionsStatsResponse);
   rpc UpdateSubscriptionDates(UpdateSubscriptionDatesRequest) returns (UpdateSubscriptionDatesResponse);
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
