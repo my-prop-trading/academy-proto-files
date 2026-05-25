@@ -20,7 +20,6 @@ message AcademySubscriptionGrpcModel {
   optional int64 CancelledAt = 8;
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
-  optional string ExternalBuyerId = 11;
 }
 
 message GetByClientIdRequest {
@@ -51,8 +50,7 @@ message CreateSubscriptionRequest {
   string ClientId = 1;
   string ProductCode = 2;
   string ExternalSubscriptionId = 3;
-  optional string ExternalBuyerId = 4;
-  optional int64 ExpiresAt = 5;
+  optional int64 ExpiresAt = 4;
 }
 
 message CreateSubscriptionResponse {
@@ -80,42 +78,24 @@ message GetSubscriptionsStatsResponse {
   int64 Blocked = 5;
 }
 
-enum UpdateSubscriptionDatesStatusGrpc {
-  UPDATE_DATES_OK = 0;
-  UPDATE_DATES_NOT_FOUND = 1;
-}
-
-message UpdateSubscriptionDatesRequest {
-  string Id = 1;
-  optional int64 StartedAt = 2;
-  optional int64 ExpiresAt = 3;
-}
-
-message UpdateSubscriptionDatesResponse {
-  UpdateSubscriptionDatesStatusGrpc Status = 1;
-  optional AcademySubscriptionGrpcModel Subscription = 2;
-}
-
 enum UpdateSubscriptionStatusGrpc {
   UPDATE_OK = 0;
   UPDATE_NOT_FOUND = 1;
 }
 
 // Partial update. None field = keep current value.
-// For optional/nullable fields (ExpiresAt, CancelledAt, ExternalBuyerId) use
-// the matching Clear* bool to explicitly set the field to null.
+// For optional/nullable fields (ExpiresAt, CancelledAt) use the matching
+// Clear* bool to explicitly set the field to null.
 message UpdateSubscriptionRequest {
   string Id = 1;
   optional AcademySubscriptionStatusGrpc Status = 2;
   optional string ProductCode = 3;
   optional string ExternalId = 4;
-  optional string ExternalBuyerId = 5;
-  bool ClearExternalBuyerId = 6;
-  optional int64 StartedAt = 7;
-  optional int64 ExpiresAt = 8;
-  bool ClearExpiresAt = 9;
-  optional int64 CancelledAt = 10;
-  bool ClearCancelledAt = 11;
+  optional int64 StartedAt = 5;
+  optional int64 ExpiresAt = 6;
+  bool ClearExpiresAt = 7;
+  optional int64 CancelledAt = 8;
+  bool ClearCancelledAt = 9;
 }
 
 message UpdateSubscriptionResponse {
@@ -129,7 +109,6 @@ service AcademySubscriptionsGrpcService {
   rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
   rpc GetSubscriptionsStats(google.protobuf.Empty) returns (GetSubscriptionsStatsResponse);
-  rpc UpdateSubscriptionDates(UpdateSubscriptionDatesRequest) returns (UpdateSubscriptionDatesResponse);
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

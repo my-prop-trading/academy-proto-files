@@ -8,6 +8,7 @@ message AcademyClientGrpcModel {
   bool HasPassword = 3;
   int64 CreatedAt = 4;
   int64 UpdatedAt = 5;
+  optional string ExternalId = 6;
 }
 
 message CreateClientIfNotExistsRequest {
@@ -117,6 +118,21 @@ message GetClientsCountResponse {
   int64 Total = 1;
 }
 
+enum SetExternalIdStatusGrpc {
+  SET_EXTERNAL_ID_OK = 0;
+  SET_EXTERNAL_ID_CLIENT_NOT_FOUND = 1;
+}
+
+// External_id is Billerix buyer id. Empty string clears it.
+message SetExternalIdRequest {
+  string ClientId = 1;
+  optional string ExternalId = 2;
+}
+
+message SetExternalIdResponse {
+  SetExternalIdStatusGrpc Status = 1;
+}
+
 service AcademyClientsGrpcService {
   rpc CreateClientIfNotExists(CreateClientIfNotExistsRequest) returns (CreateClientIfNotExistsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
@@ -128,5 +144,6 @@ service AcademyClientsGrpcService {
   rpc GetClientsCount(google.protobuf.Empty) returns (GetClientsCountResponse);
   rpc GenerateResetCode(GenerateResetCodeRequest) returns (GenerateResetCodeResponse);
   rpc ResetPasswordWithCode(ResetPasswordWithCodeRequest) returns (ResetPasswordWithCodeResponse);
+  rpc SetExternalId(SetExternalIdRequest) returns (SetExternalIdResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
