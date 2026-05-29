@@ -105,6 +105,7 @@ message UpdateSubscriptionRequest {
   bool ClearExpiresAt = 7;
   optional int64 CancelledAt = 8;
   bool ClearCancelledAt = 9;
+  optional AcademySubscriptionProviderGrpc Provider = 10;
 }
 
 message UpdateSubscriptionResponse {
