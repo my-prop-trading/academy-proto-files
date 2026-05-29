@@ -9,6 +9,14 @@ enum AcademySubscriptionStatusGrpc {
   BLOCKED = 3;
 }
 
+// Existing rows pre-migration are PROVIDER_UNSPECIFIED (= 0), treated as Billerix
+// by academy-subscriptions for backward compat.
+enum AcademySubscriptionProviderGrpc {
+  PROVIDER_UNSPECIFIED = 0;
+  PROVIDER_BILLERIX = 1;
+  PROVIDER_SOLIDGATE = 2;
+}
+
 message AcademySubscriptionGrpcModel {
   string Id = 1;
   string ClientId = 2;
@@ -20,6 +28,7 @@ message AcademySubscriptionGrpcModel {
   optional int64 CancelledAt = 8;
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
+  AcademySubscriptionProviderGrpc Provider = 11;
 }
 
 message GetByClientIdRequest {
