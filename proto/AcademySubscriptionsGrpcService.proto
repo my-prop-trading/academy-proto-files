@@ -20,7 +20,7 @@ enum AcademySubscriptionProviderGrpc {
 message AcademySubscriptionGrpcModel {
   string Id = 1;
   string ClientId = 2;
-  string ExternalId = 3;
+  optional string ExternalId = 3;
   AcademySubscriptionStatusGrpc Status = 4;
   string ProductCode = 5;
   int64 StartedAt = 6;
@@ -58,7 +58,7 @@ message CancelSubscriptionResponse {
 message CreateSubscriptionRequest {
   string ClientId = 1;
   string ProductCode = 2;
-  string ExternalSubscriptionId = 3;
+  optional string ExternalSubscriptionId = 3;
   optional int64 ExpiresAt = 4;
 }
 
@@ -93,8 +93,8 @@ enum UpdateSubscriptionStatusGrpc {
 }
 
 // Partial update. None field = keep current value.
-// For optional/nullable fields (ExpiresAt, CancelledAt) use the matching
-// Clear* bool to explicitly set the field to null.
+// For optional/nullable fields (ExternalId, ExpiresAt, CancelledAt) use the
+// matching Clear* bool to explicitly set the field to null.
 message UpdateSubscriptionRequest {
   string Id = 1;
   optional AcademySubscriptionStatusGrpc Status = 2;
@@ -106,6 +106,7 @@ message UpdateSubscriptionRequest {
   optional int64 CancelledAt = 8;
   bool ClearCancelledAt = 9;
   optional AcademySubscriptionProviderGrpc Provider = 10;
+  bool ClearExternalId = 11;
 }
 
 message UpdateSubscriptionResponse {
