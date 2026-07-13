@@ -32,9 +32,37 @@ message GetLessonProgressResponse {
   optional AcademyLessonProgressGrpcModel Progress = 1;
 }
 
+message AddStudyTimeRequest {
+  string ClientId = 1;
+  string LessonId = 2;
+  int32 Seconds = 3;   // active seconds to add (one heartbeat increment)
+}
+
+message StudyTimeDayGrpcModel {
+  int32 Day = 1;       // YYYYMMDD (UTC)
+  int64 Seconds = 2;
+}
+
+message StudyTimeLessonGrpcModel {
+  string LessonId = 1;
+  int64 Seconds = 2;
+}
+
+message GetStudyTimeRequest {
+  string ClientId = 1;
+}
+
+message GetStudyTimeResponse {
+  int64 TotalSeconds = 1;
+  repeated StudyTimeDayGrpcModel ByDay = 2;
+  repeated StudyTimeLessonGrpcModel ByLesson = 3;
+}
+
 service AcademyLessonsGrpcService {
   rpc MarkLessonCompleted(MarkLessonCompletedRequest) returns (google.protobuf.Empty);
   rpc GetCompletedLessons(GetCompletedLessonsRequest) returns (GetCompletedLessonsResponse);
   rpc GetLessonProgress(GetLessonProgressRequest) returns (GetLessonProgressResponse);
+  rpc AddStudyTime(AddStudyTimeRequest) returns (google.protobuf.Empty);
+  rpc GetStudyTime(GetStudyTimeRequest) returns (GetStudyTimeResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
