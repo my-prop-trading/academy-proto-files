@@ -133,6 +133,56 @@ message SetExternalIdResponse {
   SetExternalIdStatusGrpc Status = 1;
 }
 
+enum ChangePasswordStatusGrpc {
+  CHANGE_PASSWORD_OK = 0;
+  CHANGE_PASSWORD_CLIENT_NOT_FOUND = 1;
+  CHANGE_PASSWORD_INVALID_OLD_PASSWORD = 2;
+  CHANGE_PASSWORD_NOT_SET = 3;
+}
+
+// Self-service password change: verifies the current password before setting the new one.
+message ChangePasswordRequest {
+  string ClientId = 1;
+  string OldPassword = 2;
+  string NewPassword = 3;
+}
+
+message ChangePasswordResponse {
+  ChangePasswordStatusGrpc Status = 1;
+}
+
+enum ForceSetPasswordStatusGrpc {
+  FORCE_SET_PASSWORD_OK = 0;
+  FORCE_SET_PASSWORD_CLIENT_NOT_FOUND = 1;
+}
+
+// Admin-only password reset: sets a new password without knowing the old one.
+message ForceSetPasswordRequest {
+  string ClientId = 1;
+  string NewPassword = 2;
+}
+
+message ForceSetPasswordResponse {
+  ForceSetPasswordStatusGrpc Status = 1;
+}
+
+enum ChangeEmailStatusGrpc {
+  CHANGE_EMAIL_OK = 0;
+  CHANGE_EMAIL_CLIENT_NOT_FOUND = 1;
+  CHANGE_EMAIL_ALREADY_TAKEN = 2;
+}
+
+// Changes the client's login email. NewEmail is plain text; uniqueness is enforced
+// against the encrypted column. A no-op (same email) returns OK.
+message ChangeEmailRequest {
+  string ClientId = 1;
+  string NewEmail = 2;
+}
+
+message ChangeEmailResponse {
+  ChangeEmailStatusGrpc Status = 1;
+}
+
 service AcademyClientsGrpcService {
   rpc CreateClientIfNotExists(CreateClientIfNotExistsRequest) returns (CreateClientIfNotExistsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
@@ -145,5 +195,8 @@ service AcademyClientsGrpcService {
   rpc GenerateResetCode(GenerateResetCodeRequest) returns (GenerateResetCodeResponse);
   rpc ResetPasswordWithCode(ResetPasswordWithCodeRequest) returns (ResetPasswordWithCodeResponse);
   rpc SetExternalId(SetExternalIdRequest) returns (SetExternalIdResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc ForceSetPassword(ForceSetPasswordRequest) returns (ForceSetPasswordResponse);
+  rpc ChangeEmail(ChangeEmailRequest) returns (ChangeEmailResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
