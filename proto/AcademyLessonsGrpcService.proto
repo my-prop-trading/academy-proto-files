@@ -58,11 +58,22 @@ message GetStudyTimeResponse {
   repeated StudyTimeLessonGrpcModel ByLesson = 3;
 }
 
+message GetLessonsRankRequest {
+  string ClientId = 1;
+}
+
+message GetLessonsRankResponse {
+  int64 CompletedCount = 1;   // lessons this client has completed
+  int64 TotalLearners = 2;    // clients with >= 1 completed lesson
+  int32 BetterThanPercent = 3; // % of learners who completed fewer lessons than this client (0..100)
+}
+
 service AcademyLessonsGrpcService {
   rpc MarkLessonCompleted(MarkLessonCompletedRequest) returns (google.protobuf.Empty);
   rpc GetCompletedLessons(GetCompletedLessonsRequest) returns (GetCompletedLessonsResponse);
   rpc GetLessonProgress(GetLessonProgressRequest) returns (GetLessonProgressResponse);
   rpc AddStudyTime(AddStudyTimeRequest) returns (google.protobuf.Empty);
   rpc GetStudyTime(GetStudyTimeRequest) returns (GetStudyTimeResponse);
+  rpc GetLessonsRank(GetLessonsRankRequest) returns (GetLessonsRankResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
