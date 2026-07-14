@@ -133,6 +133,12 @@ message SetExternalIdResponse {
   SetExternalIdStatusGrpc Status = 1;
 }
 
+// Looks a client up by its external_id (payment-provider buyer id). This is the
+// stable identity used to match subscription webhooks, so it survives email changes.
+message GetClientByExternalIdRequest {
+  string ExternalId = 1;
+}
+
 enum ChangePasswordStatusGrpc {
   CHANGE_PASSWORD_OK = 0;
   CHANGE_PASSWORD_CLIENT_NOT_FOUND = 1;
@@ -189,6 +195,7 @@ service AcademyClientsGrpcService {
   rpc VerifyPassword(VerifyPasswordRequest) returns (VerifyPasswordResponse);
   rpc GetClientByEmail(GetClientByEmailRequest) returns (GetClientResponse);
   rpc GetClientById(GetClientByIdRequest) returns (GetClientResponse);
+  rpc GetClientByExternalId(GetClientByExternalIdRequest) returns (GetClientResponse);
   rpc GetClientsByIds(GetClientsByIdsRequest) returns (GetClientsByIdsResponse);
   rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
   rpc GetClientsCount(google.protobuf.Empty) returns (GetClientsCountResponse);
