@@ -61,6 +61,24 @@ message CancelSubscriptionResponse {
   CancelSubscriptionStatusGrpc Status = 1;
 }
 
+enum ResumeSubscriptionStatusGrpc {
+  RESUME_OK = 0;
+  RESUME_NOT_FOUND = 1;
+  // Provider has no restore capability (Billerix / Unspecified).
+  RESUME_NOT_SUPPORTED = 2;
+  // Nothing to resume — the subscription is neither cancelled nor scheduled for cancellation.
+  RESUME_NOT_CANCELLED = 3;
+}
+
+message ResumeSubscriptionRequest {
+  string ClientId = 1;
+  string Ip = 2;
+}
+
+message ResumeSubscriptionResponse {
+  ResumeSubscriptionStatusGrpc Status = 1;
+}
+
 message CreateSubscriptionRequest {
   string ClientId = 1;
   string ProductCode = 2;
@@ -131,6 +149,7 @@ message UpdateSubscriptionResponse {
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
+  rpc ResumeSubscription(ResumeSubscriptionRequest) returns (ResumeSubscriptionResponse);
   rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
   rpc GetSubscriptionsStats(google.protobuf.Empty) returns (GetSubscriptionsStatsResponse);
