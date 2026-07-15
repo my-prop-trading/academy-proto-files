@@ -29,6 +29,12 @@ message AcademySubscriptionGrpcModel {
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
   AcademySubscriptionProviderGrpc Provider = 11;
+  // Subscription amount in major units (e.g. 24.00). Absent for manual/pre-migration subs.
+  optional double Amount = 12;
+  optional string Currency = 13;
+  // Customer-facing payment method ("card", "paypal", ...). Absent when the provider does not
+  // expose it (e.g. Billerix) or for manual subscriptions.
+  optional string PaymentMethod = 14;
 }
 
 message GetByClientIdRequest {
@@ -60,6 +66,8 @@ message CreateSubscriptionRequest {
   string ProductCode = 2;
   optional string ExternalSubscriptionId = 3;
   optional int64 ExpiresAt = 4;
+  optional double Amount = 5;
+  optional string Currency = 6;
 }
 
 message CreateSubscriptionResponse {
@@ -107,6 +115,12 @@ message UpdateSubscriptionRequest {
   bool ClearCancelledAt = 9;
   optional AcademySubscriptionProviderGrpc Provider = 10;
   bool ClearExternalId = 11;
+  optional double Amount = 12;
+  bool ClearAmount = 13;
+  optional string Currency = 14;
+  bool ClearCurrency = 15;
+  optional string PaymentMethod = 16;
+  bool ClearPaymentMethod = 17;
 }
 
 message UpdateSubscriptionResponse {
