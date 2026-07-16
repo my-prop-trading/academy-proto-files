@@ -6,7 +6,17 @@ message SendForgotPasswordRequest {
   string Email = 1;
 }
 
+// Support "Contact us" form. The client is authenticated, so it is identified by
+// ClientId; the service resolves the email itself. Sends two emails: one to the
+// support inbox with the form contents, and a confirmation to the client.
+message SendContactFormRequest {
+  string ClientId = 1;
+  string Subject = 2;
+  string Description = 3;
+}
+
 service AcademyEmailsGrpcService {
   rpc SendForgotPassword(SendForgotPasswordRequest) returns (google.protobuf.Empty);
+  rpc SendContactForm(SendContactFormRequest) returns (google.protobuf.Empty);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
