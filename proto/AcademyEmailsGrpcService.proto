@@ -6,6 +6,15 @@ message SendForgotPasswordRequest {
   string Email = 1;
 }
 
+enum SendForgotPasswordStatusGrpc {
+  SEND_FORGOT_PASSWORD_OK = 0;
+  SEND_FORGOT_PASSWORD_CLIENT_NOT_FOUND = 1;
+}
+
+message SendForgotPasswordResponse {
+  SendForgotPasswordStatusGrpc Status = 1;
+}
+
 // Support "Contact us" form. The client is authenticated, so it is identified by
 // ClientId; the service resolves the email itself. Sends two emails: one to the
 // support inbox with the form contents, and a confirmation to the client.
@@ -16,7 +25,7 @@ message SendContactFormRequest {
 }
 
 service AcademyEmailsGrpcService {
-  rpc SendForgotPassword(SendForgotPasswordRequest) returns (google.protobuf.Empty);
+  rpc SendForgotPassword(SendForgotPasswordRequest) returns (SendForgotPasswordResponse);
   rpc SendContactForm(SendContactFormRequest) returns (google.protobuf.Empty);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
