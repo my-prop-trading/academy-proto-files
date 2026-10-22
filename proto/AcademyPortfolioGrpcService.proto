@@ -26,6 +26,7 @@ message AcademyPortfolioAssetGrpcModel {
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
   AssetTypeGrpc Type = 11;
+  optional string PriceSource = 12; // "manual" or the feed provider id
 }
 
 enum AcademyTradeSideGrpc {
@@ -112,6 +113,27 @@ message SetPriceResponse {
   SetPriceStatusGrpc Status = 1;
 }
 
+// Prices from a feed; unknown asset ids and non-positive prices are skipped.
+message PriceUpdateGrpcModel {
+  string AssetId = 1;
+  string Price = 2;
+  string Source = 3;           // provider id
+  int64 QuotedAt = 4;          // time of the quote
+}
+
+message SetPricesRequest {
+  repeated PriceUpdateGrpcModel Prices = 1;
+}
+
+message SetPricesResponse {
+  int32 Updated = 1;
+  repeated string SkippedAssetIds = 2;
+}
+
+message PortfolioSettingsGrpcModel {
+  int64 MaxPriceAgeSecs = 1;   // trades are rejected when the price is older; 0 = no limit
+}
+
 enum TradeStatusGrpc {
   TRADE_OK = 0;
   TRADE_INVALID_AMOUNT = 1;        // non-positive, malformed, too precise, or rounds to zero quantity
@@ -120,6 +142,7 @@ enum TradeStatusGrpc {
   TRADE_NO_PRICE = 4;
   TRADE_INSUFFICIENT_COINS = 5;
   TRADE_INSUFFICIENT_QUANTITY = 6;
+  TRADE_PRICE_STALE = 7;
 }
 
 // Repeating a RequestId returns the trade it created and executes nothing.
@@ -216,6 +239,9 @@ service AcademyPortfolioGrpcService {
   rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
   rpc UpdateAsset(UpdateAssetRequest) returns (UpdateAssetResponse);
   rpc SetPrice(SetPriceRequest) returns (SetPriceResponse);
+  rpc SetPrices(SetPricesRequest) returns (SetPricesResponse);
+  rpc GetSettings(google.protobuf.Empty) returns (PortfolioSettingsGrpcModel);
+  rpc UpdateSettings(PortfolioSettingsGrpcModel) returns (PortfolioSettingsGrpcModel);
   rpc Buy(BuyRequest) returns (TradeResponse);
   rpc Sell(SellRequest) returns (TradeResponse);
   rpc SetHolding(SetHoldingRequest) returns (SetHoldingResponse);

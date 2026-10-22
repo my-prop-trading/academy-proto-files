@@ -1,0 +1,28 @@
+syntax = "proto3";
+package academy_prices;
+import "google/protobuf/empty.proto";
+
+// Price feed: pulls quotes from providers in priority order per asset type and pushes them
+// to the portfolio; a failing provider is skipped for a cooldown.
+
+message ProviderStatusGrpcModel {
+  string Id = 1;
+  bool Available = 2;              // false while cooling down after a failure
+  optional int64 CooldownUntil = 3;
+  optional int64 LastSuccessAt = 4;
+  optional string LastError = 5;
+  int32 LastQuoted = 6;            // assets priced in its last successful fetch
+}
+
+message FeedStatusGrpcModel {
+  optional int64 LastCycleAt = 1;
+  int32 LastCycleUpdated = 2;      // assets priced in the last cycle
+  repeated string LastCycleUnpriced = 3;  // symbols no provider priced in the last cycle
+  repeated ProviderStatusGrpcModel Providers = 4;
+}
+
+service AcademyPricesGrpcService {
+  rpc GetFeedStatus(google.protobuf.Empty) returns (FeedStatusGrpcModel);
+  rpc RefreshNow(google.protobuf.Empty) returns (FeedStatusGrpcModel);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
