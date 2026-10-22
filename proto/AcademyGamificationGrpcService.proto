@@ -11,6 +11,8 @@ enum AcademyStatsReasonGrpc {
   REASON_WELCOME = 0;
   REASON_LESSON_COMPLETED = 1;
   REASON_ADMIN_ADJUSTMENT = 2;
+  REASON_ASSET_BUY = 3;
+  REASON_ASSET_SELL = 4;
 }
 
 message AcademyStatsGrpcModel {

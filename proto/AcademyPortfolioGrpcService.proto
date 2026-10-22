@@ -1,0 +1,166 @@
+syntax = "proto3";
+package academy_portfolio;
+import "google/protobuf/empty.proto";
+
+// Quantities, prices and asset values are decimal strings ("0.00125", "64250.5"); coins are whole numbers.
+// 1 coin = 1 USD.
+
+message AcademyPortfolioAssetGrpcModel {
+  string Id = 1;
+  string Symbol = 2;
+  string Name = 3;
+  int32 Decimals = 4;          // fractional digits allowed in a quantity
+  bool Enabled = 5;            // disabled: can be sold, cannot be bought
+  int32 SortOrder = 6;
+  optional string Price = 7;   // absent until a price is set
+  optional int64 PriceUpdatedAt = 8;
+  int64 CreatedAt = 9;
+  int64 UpdatedAt = 10;
+}
+
+enum AcademyTradeSideGrpc {
+  SIDE_BUY = 0;
+  SIDE_SELL = 1;
+}
+
+message AcademyPortfolioTradeGrpcModel {
+  string Id = 1;
+  string AssetId = 2;
+  string Symbol = 3;
+  AcademyTradeSideGrpc Side = 4;
+  string Quantity = 5;
+  string Price = 6;
+  int64 Coins = 7;             // spent on buy, received on sell
+  string RequestId = 8;
+  int64 CreatedAt = 9;
+}
+
+message AcademyPortfolioHoldingGrpcModel {
+  AcademyPortfolioAssetGrpcModel Asset = 1;
+  string Quantity = 2;
+  string AvgPrice = 3;
+  string Value = 4;            // quantity x current price; "0" without a price
+  string Pnl = 5;              // value - quantity x avg price
+}
+
+message ListAssetsRequest {
+  bool IncludeDisabled = 1;
+  bool IncludeUnpriced = 2;
+}
+
+message ListAssetsResponse {
+  repeated AcademyPortfolioAssetGrpcModel Assets = 1;
+}
+
+message CreateAssetRequest {
+  string Symbol = 1;
+  string Name = 2;
+  int32 Decimals = 3;
+  int32 SortOrder = 4;
+}
+
+enum AssetStatusGrpc {
+  ASSET_OK = 0;
+  ASSET_NOT_FOUND = 1;
+  ASSET_SYMBOL_EXISTS = 2;
+  ASSET_INVALID = 3;           // empty symbol/name or decimals out of range
+}
+
+message CreateAssetResponse {
+  AssetStatusGrpc Status = 1;
+  optional AcademyPortfolioAssetGrpcModel Asset = 2;
+}
+
+message UpdateAssetRequest {
+  string Id = 1;
+  string Name = 2;
+  int32 Decimals = 3;
+  bool Enabled = 4;
+  int32 SortOrder = 5;
+}
+
+message UpdateAssetResponse {
+  AssetStatusGrpc Status = 1;
+  optional AcademyPortfolioAssetGrpcModel Asset = 2;
+}
+
+message SetPriceRequest {
+  string AssetId = 1;
+  string Price = 2;            // positive decimal
+}
+
+enum SetPriceStatusGrpc {
+  SET_PRICE_OK = 0;
+  SET_PRICE_ASSET_NOT_FOUND = 1;
+  SET_PRICE_INVALID = 2;
+}
+
+message SetPriceResponse {
+  SetPriceStatusGrpc Status = 1;
+}
+
+enum TradeStatusGrpc {
+  TRADE_OK = 0;
+  TRADE_INVALID_AMOUNT = 1;        // non-positive, malformed, too precise, or rounds to zero quantity
+  TRADE_ASSET_NOT_FOUND = 2;
+  TRADE_ASSET_DISABLED = 3;
+  TRADE_NO_PRICE = 4;
+  TRADE_INSUFFICIENT_COINS = 5;
+  TRADE_INSUFFICIENT_QUANTITY = 6;
+}
+
+// Repeating a RequestId returns the trade it created and executes nothing.
+message BuyRequest {
+  string ClientId = 1;
+  string AssetId = 2;
+  int64 Coins = 3;
+  string RequestId = 4;
+}
+
+message SellRequest {
+  string ClientId = 1;
+  string AssetId = 2;
+  string Quantity = 3;
+  string RequestId = 4;
+}
+
+message TradeResponse {
+  TradeStatusGrpc Status = 1;
+  optional AcademyPortfolioTradeGrpcModel Trade = 2;
+  optional AcademyPortfolioHoldingGrpcModel Holding = 3;
+  int64 Coins = 4;             // coin balance after the call
+}
+
+message GetPortfolioRequest {
+  string ClientId = 1;
+}
+
+message GetPortfolioResponse {
+  int64 Coins = 1;
+  string AssetsValue = 2;
+  string TotalBalance = 3;     // coins + assets value
+  repeated AcademyPortfolioHoldingGrpcModel Holdings = 4;
+}
+
+message ListTradesRequest {
+  string ClientId = 1;
+  int32 Limit = 2;
+  int32 Offset = 3;
+}
+
+message ListTradesResponse {
+  repeated AcademyPortfolioTradeGrpcModel Trades = 1;
+  int64 Total = 2;
+}
+
+service AcademyPortfolioGrpcService {
+  rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
+  rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
+  rpc UpdateAsset(UpdateAssetRequest) returns (UpdateAssetResponse);
+  rpc SetPrice(SetPriceRequest) returns (SetPriceResponse);
+  rpc Buy(BuyRequest) returns (TradeResponse);
+  rpc Sell(SellRequest) returns (TradeResponse);
+  rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse);
+  rpc ListTrades(ListTradesRequest) returns (ListTradesResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
