@@ -2,119 +2,179 @@ syntax = "proto3";
 package academy_gamification;
 import "google/protobuf/empty.proto";
 
-enum AcademyStatsAssetGrpc {
-  ASSET_COINS = 0;
-  ASSET_XP = 1;
+// Coins: spendable currency, balance never below 0.
+// XP: experience points, never spent; corrections cannot take the total below 0.
+// Streak: consecutive local days with a completed lesson.
+// Earning rules: coins and XP credited per event; streak milestones are rules with Days.
+
+enum EarningEventGrpc {
+  EARNING_EVENT_WELCOME = 0;
+  EARNING_EVENT_LESSON_COMPLETED = 1;
+  EARNING_EVENT_STREAK_DAYS = 2;
 }
 
-enum AcademyStatsReasonGrpc {
-  REASON_WELCOME = 0;
-  REASON_LESSON_COMPLETED = 1;
-  REASON_ADMIN_ADJUSTMENT = 2;
-  REASON_ASSET_BUY = 3;
-  REASON_ASSET_SELL = 4;
+enum CoinReasonGrpc {
+  COIN_REASON_WELCOME = 0;
+  COIN_REASON_LESSON_COMPLETED = 1;
+  COIN_REASON_ADMIN_ADJUSTMENT = 2;
+  COIN_REASON_ASSET_BUY = 3;
+  COIN_REASON_ASSET_SELL = 4;
+  COIN_REASON_STREAK_MILESTONE = 5;
 }
 
-message AcademyStatsGrpcModel {
+enum XpReasonGrpc {
+  XP_REASON_WELCOME = 0;
+  XP_REASON_LESSON_COMPLETED = 1;
+  XP_REASON_ADMIN_ADJUSTMENT = 2;
+  XP_REASON_STREAK_MILESTONE = 3;
+}
+
+message RewardGrpcModel {
   int64 Coins = 1;
   int64 Xp = 2;
 }
 
-message AcademyStatsTransactionGrpcModel {
-  string ClientId = 1;
-  AcademyStatsAssetGrpc Asset = 2;
-  int64 Amount = 3;   // signed: negative = debit
-  AcademyStatsReasonGrpc Reason = 4;
-  string RefId = 5;   // idempotency key within (client, asset, reason)
-  optional string Comment = 6;
-  int64 CreatedAt = 7;
+message StreakMilestoneGrpcModel {
+  int32 Days = 1;
+  RewardGrpcModel Reward = 2;
 }
 
-// Credit amounts; 0 = not credited.
-message AcademyStatsSettingsGrpcModel {
-  int64 WelcomeCoins = 1;
-  int64 WelcomeXp = 2;
-  int64 LessonCoins = 3;
-  int64 LessonXp = 4;
-  int64 UpdatedAt = 5;
+message StreakGrpcModel {
+  int32 Current = 1;           // 0 once a local day is missed
+  int32 Best = 2;
+  bool ActiveToday = 3;
+  optional StreakMilestoneGrpcModel Next = 4;  // nearest milestone above Current
+  optional string Timezone = 5;                // IANA zone used for days; UTC when absent
+}
+
+message StatsGrpcModel {
+  int64 Coins = 1;
+  int64 Xp = 2;
+  StreakGrpcModel Streak = 3;
 }
 
 message GetStatsRequest {
   string ClientId = 1;
 }
 
-message ListTransactionsRequest {
+// Credits the lesson once per LessonId, marks today active, extends the streak and credits a
+// reached milestone once per streak. Safe to retry.
+message OnLessonCompletedRequest {
+  string ClientId = 1;
+  string LessonId = 2;
+  optional string Timezone = 3;  // IANA zone; stored for the client when valid
+}
+
+message OnLessonCompletedResponse {
+  RewardGrpcModel Reward = 1;                       // total credited by this call
+  optional StreakMilestoneGrpcModel Milestone = 2;  // milestone credited by this call
+  StatsGrpcModel Stats = 3;
+}
+
+message CoinTransactionGrpcModel {
+  string ClientId = 1;
+  CoinReasonGrpc Reason = 2;
+  string RefId = 3;            // idempotency key within (client, reason)
+  int64 Amount = 4;            // signed: negative = debit
+  optional string Comment = 5;
+  int64 CreatedAt = 6;
+}
+
+message XpEventGrpcModel {
+  string ClientId = 1;
+  XpReasonGrpc Reason = 2;
+  string RefId = 3;            // idempotency key within (client, reason)
+  int64 Amount = 4;            // negative only for corrections
+  optional string Comment = 5;
+  int64 CreatedAt = 6;
+}
+
+message ListByClientRequest {
   string ClientId = 1;
   int32 Limit = 2;
   int32 Offset = 3;
 }
 
-message ListTransactionsResponse {
-  repeated AcademyStatsTransactionGrpcModel Transactions = 1;
+message ListCoinTransactionsResponse {
+  repeated CoinTransactionGrpcModel Transactions = 1;
   int64 Total = 2;
 }
 
-// Credits the amounts configured for Reason; repeating the same (ClientId, Reason, RefId) credits nothing.
-message GrantRequest {
-  string ClientId = 1;
-  AcademyStatsReasonGrpc Reason = 2;  // WELCOME or LESSON_COMPLETED
-  string RefId = 3;
-}
-
-enum GrantStatusGrpc {
-  GRANT_OK = 0;
-  GRANT_INVALID_REASON = 1;
-}
-
-message GrantResponse {
-  GrantStatusGrpc Status = 1;
-  AcademyStatsGrpcModel Granted = 2;  // credited by this call; zeros on repeat
-  AcademyStatsGrpcModel Stats = 3;    // balance after the call
+message ListXpEventsResponse {
+  repeated XpEventGrpcModel Events = 1;
+  int64 Total = 2;
 }
 
 message AdjustRequest {
   string ClientId = 1;
-  AcademyStatsAssetGrpc Asset = 2;
-  int64 Amount = 3;    // signed, non-zero
-  string Comment = 4;  // required
+  int64 Amount = 2;            // signed, non-zero
+  string Comment = 3;          // required
 }
 
 enum AdjustStatusGrpc {
   ADJUST_OK = 0;
   ADJUST_CLIENT_NOT_FOUND = 1;
-  ADJUST_INSUFFICIENT_BALANCE = 2;
+  ADJUST_BELOW_ZERO = 2;
   ADJUST_INVALID_AMOUNT = 3;
   ADJUST_COMMENT_REQUIRED = 4;
 }
 
 message AdjustResponse {
   AdjustStatusGrpc Status = 1;
-  AcademyStatsGrpcModel Stats = 2;
+  int64 Balance = 2;           // coins or XP after the call
 }
 
-message UpdateSettingsRequest {
-  int64 WelcomeCoins = 1;
-  int64 WelcomeXp = 2;
-  int64 LessonCoins = 3;
-  int64 LessonXp = 4;
+message EarningRuleGrpcModel {
+  EarningEventGrpc Event = 1;
+  int32 Days = 2;              // streak length for STREAK_DAYS; 0 otherwise
+  RewardGrpcModel Reward = 3;
+  int64 UpdatedAt = 4;
 }
 
-enum UpdateSettingsStatusGrpc {
-  UPDATE_SETTINGS_OK = 0;
-  UPDATE_SETTINGS_NEGATIVE_AMOUNT = 1;
+message ListEarningRulesResponse {
+  repeated EarningRuleGrpcModel Rules = 1;
 }
 
-message UpdateSettingsResponse {
-  UpdateSettingsStatusGrpc Status = 1;
-  AcademyStatsSettingsGrpcModel Settings = 2;
+// Creates or replaces a rule. A WELCOME reward above 0 is also credited to existing clients lacking it.
+message SetEarningRuleRequest {
+  EarningEventGrpc Event = 1;
+  int32 Days = 2;
+  RewardGrpcModel Reward = 3;
+}
+
+enum EarningRuleStatusGrpc {
+  EARNING_RULE_OK = 0;
+  EARNING_RULE_INVALID = 1;    // negative reward, or Days not > 0 for STREAK_DAYS / not 0 otherwise
+  EARNING_RULE_NOT_FOUND = 2;
+}
+
+message SetEarningRuleResponse {
+  EarningRuleStatusGrpc Status = 1;
+  optional EarningRuleGrpcModel Rule = 2;
+}
+
+message DeleteEarningRuleRequest {
+  EarningEventGrpc Event = 1;
+  int32 Days = 2;
+}
+
+message DeleteEarningRuleResponse {
+  EarningRuleStatusGrpc Status = 1;
 }
 
 service AcademyGamificationGrpcService {
-  rpc GetStats(GetStatsRequest) returns (AcademyStatsGrpcModel);
-  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
-  rpc Grant(GrantRequest) returns (GrantResponse);
-  rpc Adjust(AdjustRequest) returns (AdjustResponse);
-  rpc GetSettings(google.protobuf.Empty) returns (AcademyStatsSettingsGrpcModel);
-  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+  rpc GetStats(GetStatsRequest) returns (StatsGrpcModel);
+  rpc OnLessonCompleted(OnLessonCompletedRequest) returns (OnLessonCompletedResponse);
+
+  rpc ListCoinTransactions(ListByClientRequest) returns (ListCoinTransactionsResponse);
+  rpc AdjustCoins(AdjustRequest) returns (AdjustResponse);
+
+  rpc ListXpEvents(ListByClientRequest) returns (ListXpEventsResponse);
+  rpc AdjustXp(AdjustRequest) returns (AdjustResponse);
+
+  rpc ListEarningRules(google.protobuf.Empty) returns (ListEarningRulesResponse);
+  rpc SetEarningRule(SetEarningRuleRequest) returns (SetEarningRuleResponse);
+  rpc DeleteEarningRule(DeleteEarningRuleRequest) returns (DeleteEarningRuleResponse);
+
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

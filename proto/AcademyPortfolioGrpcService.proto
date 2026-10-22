@@ -21,7 +21,6 @@ message AcademyPortfolioAssetGrpcModel {
 enum AcademyTradeSideGrpc {
   SIDE_BUY = 0;
   SIDE_SELL = 1;
-  SIDE_ADJUSTMENT = 2;         // admin correction: Quantity is the signed change, Price the new avg price
 }
 
 message AcademyPortfolioTradeGrpcModel {
@@ -132,12 +131,13 @@ message TradeResponse {
   int64 Coins = 4;             // coin balance after the call
 }
 
-// Sets the holding to absolute values without moving coins; recorded as an adjustment trade.
+// Sets the holding to absolute values without moving coins; recorded as a holding adjustment.
 message SetHoldingRequest {
   string ClientId = 1;
   string AssetId = 2;
   string Quantity = 3;         // >= 0; "0" closes the position
   string AvgPrice = 4;         // positive; ignored when Quantity is 0
+  string Comment = 5;          // required
 }
 
 enum SetHoldingStatusGrpc {
@@ -145,11 +145,35 @@ enum SetHoldingStatusGrpc {
   SET_HOLDING_CLIENT_NOT_FOUND = 1;
   SET_HOLDING_ASSET_NOT_FOUND = 2;
   SET_HOLDING_INVALID = 3;     // malformed or too precise quantity/price
+  SET_HOLDING_COMMENT_REQUIRED = 4;
 }
 
 message SetHoldingResponse {
   SetHoldingStatusGrpc Status = 1;
   optional AcademyPortfolioHoldingGrpcModel Holding = 2;
+}
+
+message HoldingAdjustmentGrpcModel {
+  string Id = 1;
+  string AssetId = 2;
+  string Symbol = 3;
+  string QuantityBefore = 4;
+  string QuantityAfter = 5;
+  string AvgPriceBefore = 6;
+  string AvgPriceAfter = 7;
+  string Comment = 8;
+  int64 CreatedAt = 9;
+}
+
+message ListHoldingAdjustmentsRequest {
+  string ClientId = 1;
+  int32 Limit = 2;
+  int32 Offset = 3;
+}
+
+message ListHoldingAdjustmentsResponse {
+  repeated HoldingAdjustmentGrpcModel Adjustments = 1;
+  int64 Total = 2;
 }
 
 message GetPortfolioRequest {
@@ -182,6 +206,7 @@ service AcademyPortfolioGrpcService {
   rpc Buy(BuyRequest) returns (TradeResponse);
   rpc Sell(SellRequest) returns (TradeResponse);
   rpc SetHolding(SetHoldingRequest) returns (SetHoldingResponse);
+  rpc ListHoldingAdjustments(ListHoldingAdjustmentsRequest) returns (ListHoldingAdjustmentsResponse);
   rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse);
   rpc ListTrades(ListTradesRequest) returns (ListTradesResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
