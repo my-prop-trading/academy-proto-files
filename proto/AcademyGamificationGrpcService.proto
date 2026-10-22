@@ -1,0 +1,118 @@
+syntax = "proto3";
+package academy_gamification;
+import "google/protobuf/empty.proto";
+
+enum AcademyStatsAssetGrpc {
+  ASSET_COINS = 0;
+  ASSET_XP = 1;
+}
+
+enum AcademyStatsReasonGrpc {
+  REASON_WELCOME = 0;
+  REASON_LESSON_COMPLETED = 1;
+  REASON_ADMIN_ADJUSTMENT = 2;
+}
+
+message AcademyStatsGrpcModel {
+  int64 Coins = 1;
+  int64 Xp = 2;
+}
+
+message AcademyStatsTransactionGrpcModel {
+  string ClientId = 1;
+  AcademyStatsAssetGrpc Asset = 2;
+  int64 Amount = 3;   // signed: negative = debit
+  AcademyStatsReasonGrpc Reason = 4;
+  string RefId = 5;   // idempotency key within (client, asset, reason)
+  optional string Comment = 6;
+  int64 CreatedAt = 7;
+}
+
+// Credit amounts; 0 = not credited.
+message AcademyStatsSettingsGrpcModel {
+  int64 WelcomeCoins = 1;
+  int64 WelcomeXp = 2;
+  int64 LessonCoins = 3;
+  int64 LessonXp = 4;
+  int64 UpdatedAt = 5;
+}
+
+message GetStatsRequest {
+  string ClientId = 1;
+}
+
+message ListTransactionsRequest {
+  string ClientId = 1;
+  int32 Limit = 2;
+  int32 Offset = 3;
+}
+
+message ListTransactionsResponse {
+  repeated AcademyStatsTransactionGrpcModel Transactions = 1;
+  int64 Total = 2;
+}
+
+// Credits the amounts configured for Reason; repeating the same (ClientId, Reason, RefId) credits nothing.
+message GrantRequest {
+  string ClientId = 1;
+  AcademyStatsReasonGrpc Reason = 2;  // WELCOME or LESSON_COMPLETED
+  string RefId = 3;
+}
+
+enum GrantStatusGrpc {
+  GRANT_OK = 0;
+  GRANT_INVALID_REASON = 1;
+}
+
+message GrantResponse {
+  GrantStatusGrpc Status = 1;
+  AcademyStatsGrpcModel Granted = 2;  // credited by this call; zeros on repeat
+  AcademyStatsGrpcModel Stats = 3;    // balance after the call
+}
+
+message AdjustRequest {
+  string ClientId = 1;
+  AcademyStatsAssetGrpc Asset = 2;
+  int64 Amount = 3;    // signed, non-zero
+  string Comment = 4;  // required
+}
+
+enum AdjustStatusGrpc {
+  ADJUST_OK = 0;
+  ADJUST_CLIENT_NOT_FOUND = 1;
+  ADJUST_INSUFFICIENT_BALANCE = 2;
+  ADJUST_INVALID_AMOUNT = 3;
+  ADJUST_COMMENT_REQUIRED = 4;
+}
+
+message AdjustResponse {
+  AdjustStatusGrpc Status = 1;
+  AcademyStatsGrpcModel Stats = 2;
+}
+
+message UpdateSettingsRequest {
+  int64 WelcomeCoins = 1;
+  int64 WelcomeXp = 2;
+  int64 LessonCoins = 3;
+  int64 LessonXp = 4;
+}
+
+enum UpdateSettingsStatusGrpc {
+  UPDATE_SETTINGS_OK = 0;
+  UPDATE_SETTINGS_NEGATIVE_AMOUNT = 1;
+}
+
+message UpdateSettingsResponse {
+  UpdateSettingsStatusGrpc Status = 1;
+  AcademyStatsSettingsGrpcModel Settings = 2;
+}
+
+service AcademyGamificationGrpcService {
+  rpc GetStats(GetStatsRequest) returns (AcademyStatsGrpcModel);
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
+  rpc Grant(GrantRequest) returns (GrantResponse);
+  rpc Adjust(AdjustRequest) returns (AdjustResponse);
+  rpc GetSettings(google.protobuf.Empty) returns (AcademyStatsSettingsGrpcModel);
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
