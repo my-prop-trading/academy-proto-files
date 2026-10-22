@@ -5,6 +5,15 @@ import "google/protobuf/empty.proto";
 // Quantities, prices and asset values are decimal strings ("0.00125", "64250.5"); coins are whole numbers.
 // 1 coin = 1 USD.
 
+enum AssetTypeGrpc {
+  ASSET_TYPE_CRYPTO = 0;
+  ASSET_TYPE_STOCK = 1;
+  ASSET_TYPE_ETF = 2;
+  ASSET_TYPE_COMMODITY = 3;
+  ASSET_TYPE_FOREX = 4;
+  ASSET_TYPE_INDEX = 5;
+}
+
 message AcademyPortfolioAssetGrpcModel {
   string Id = 1;
   string Symbol = 2;
@@ -16,6 +25,7 @@ message AcademyPortfolioAssetGrpcModel {
   optional int64 PriceUpdatedAt = 8;
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
+  AssetTypeGrpc Type = 11;
 }
 
 enum AcademyTradeSideGrpc {
@@ -46,6 +56,7 @@ message AcademyPortfolioHoldingGrpcModel {
 message ListAssetsRequest {
   bool IncludeDisabled = 1;
   bool IncludeUnpriced = 2;
+  optional AssetTypeGrpc Type = 3;   // only this type when set
 }
 
 message ListAssetsResponse {
@@ -57,6 +68,7 @@ message CreateAssetRequest {
   string Name = 2;
   int32 Decimals = 3;
   int32 SortOrder = 4;
+  AssetTypeGrpc Type = 5;
 }
 
 enum AssetStatusGrpc {
@@ -77,6 +89,7 @@ message UpdateAssetRequest {
   int32 Decimals = 3;
   bool Enabled = 4;
   int32 SortOrder = 5;
+  AssetTypeGrpc Type = 6;
 }
 
 message UpdateAssetResponse {
