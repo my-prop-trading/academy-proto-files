@@ -105,7 +105,13 @@ message ListXpEventsResponse {
   int64 Total = 2;
 }
 
-message AdjustRequest {
+message AdjustCoinsRequest {
+  string ClientId = 1;
+  int64 Amount = 2;            // signed, non-zero
+  string Comment = 3;          // required
+}
+
+message AdjustXpRequest {
   string ClientId = 1;
   int64 Amount = 2;            // signed, non-zero
   string Comment = 3;          // required
@@ -119,9 +125,14 @@ enum AdjustStatusGrpc {
   ADJUST_COMMENT_REQUIRED = 4;
 }
 
-message AdjustResponse {
+message AdjustCoinsResponse {
   AdjustStatusGrpc Status = 1;
-  int64 Balance = 2;           // coins or XP after the call
+  int64 Coins = 2;             // balance after the call
+}
+
+message AdjustXpResponse {
+  AdjustStatusGrpc Status = 1;
+  int64 Xp = 2;                // total after the call
 }
 
 message EarningRuleGrpcModel {
@@ -167,10 +178,10 @@ service AcademyGamificationGrpcService {
   rpc OnLessonCompleted(OnLessonCompletedRequest) returns (OnLessonCompletedResponse);
 
   rpc ListCoinTransactions(ListByClientRequest) returns (ListCoinTransactionsResponse);
-  rpc AdjustCoins(AdjustRequest) returns (AdjustResponse);
+  rpc AdjustCoins(AdjustCoinsRequest) returns (AdjustCoinsResponse);
 
   rpc ListXpEvents(ListByClientRequest) returns (ListXpEventsResponse);
-  rpc AdjustXp(AdjustRequest) returns (AdjustResponse);
+  rpc AdjustXp(AdjustXpRequest) returns (AdjustXpResponse);
 
   rpc ListEarningRules(google.protobuf.Empty) returns (ListEarningRulesResponse);
   rpc SetEarningRule(SetEarningRuleRequest) returns (SetEarningRuleResponse);
