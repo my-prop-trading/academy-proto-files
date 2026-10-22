@@ -21,8 +21,11 @@ message FeedStatusGrpcModel {
   repeated ProviderStatusGrpcModel Providers = 4;
 }
 
+// Runs a cycle now instead of waiting for the timer.
+message RefreshNowRequest {}
+
 service AcademyPricesGrpcService {
   rpc GetFeedStatus(google.protobuf.Empty) returns (FeedStatusGrpcModel);
-  rpc RefreshNow(google.protobuf.Empty) returns (FeedStatusGrpcModel);
+  rpc RefreshNow(RefreshNowRequest) returns (FeedStatusGrpcModel);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
