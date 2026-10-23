@@ -173,6 +173,32 @@ message DeleteEarningRuleResponse {
   EarningRuleStatusGrpc Status = 1;
 }
 
+// Per-day allowances; the day is the client's local day (UTC when no timezone is stored).
+enum DailyQuotaKindGrpc {
+  DAILY_QUOTA_KIND_AI_ANALYSIS = 0;
+}
+
+message GetDailyQuotaRequest {
+  string ClientId = 1;
+  DailyQuotaKindGrpc Kind = 2;
+}
+
+message GetDailyQuotaResponse {
+  int32 Used = 1;
+}
+
+// Counts one use unless today's usage has already reached Limit.
+message ConsumeDailyQuotaRequest {
+  string ClientId = 1;
+  DailyQuotaKindGrpc Kind = 2;
+  int32 Limit = 3;
+}
+
+message ConsumeDailyQuotaResponse {
+  bool Consumed = 1;
+  int32 Used = 2;              // usage after the call
+}
+
 service AcademyGamificationGrpcService {
   rpc GetStats(GetStatsRequest) returns (StatsGrpcModel);
   rpc OnLessonCompleted(OnLessonCompletedRequest) returns (OnLessonCompletedResponse);
@@ -186,6 +212,9 @@ service AcademyGamificationGrpcService {
   rpc ListEarningRules(google.protobuf.Empty) returns (ListEarningRulesResponse);
   rpc SetEarningRule(SetEarningRuleRequest) returns (SetEarningRuleResponse);
   rpc DeleteEarningRule(DeleteEarningRuleRequest) returns (DeleteEarningRuleResponse);
+
+  rpc GetDailyQuota(GetDailyQuotaRequest) returns (GetDailyQuotaResponse);
+  rpc ConsumeDailyQuota(ConsumeDailyQuotaRequest) returns (ConsumeDailyQuotaResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
