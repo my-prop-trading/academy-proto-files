@@ -136,7 +136,7 @@ message PortfolioSettingsGrpcModel {
 
 enum TradeStatusGrpc {
   TRADE_OK = 0;
-  TRADE_INVALID_AMOUNT = 1;        // non-positive, malformed, too precise, or rounds to zero quantity
+  TRADE_INVALID_AMOUNT = 1;        // non-positive, malformed, too precise, rounds to zero quantity, or both Coins and Quantity
   TRADE_ASSET_NOT_FOUND = 2;
   TRADE_ASSET_DISABLED = 3;
   TRADE_NO_PRICE = 4;
@@ -149,8 +149,9 @@ enum TradeStatusGrpc {
 message BuyRequest {
   string ClientId = 1;
   string AssetId = 2;
-  int64 Coins = 3;
+  int64 Coins = 3;             // 0 when Quantity is set
   string RequestId = 4;
+  optional string Quantity = 5; // buys exactly this quantity, charged rounded up to whole coins
 }
 
 message SellRequest {
