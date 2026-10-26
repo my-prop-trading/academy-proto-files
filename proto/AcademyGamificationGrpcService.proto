@@ -22,6 +22,7 @@ enum CoinReasonGrpc {
   COIN_REASON_ASSET_SELL = 4;
   COIN_REASON_STREAK_MILESTONE = 5;
   COIN_REASON_AI_ANALYSIS = 6;
+  COIN_REASON_AI_ANALYSIS_PURCHASE = 7;
 }
 
 enum XpReasonGrpc {
@@ -213,6 +214,18 @@ message CreditAiAnalysisResponse {
   RewardGrpcModel Reward = 1;  // credited by this call; zero on a repeat
 }
 
+// Debits Price coins for an analysis over the daily limit, once per AnalysisId, only when the
+// balance covers it.
+message ChargeAiAnalysisRequest {
+  string ClientId = 1;
+  string AnalysisId = 2;
+  int64 Price = 3;
+}
+
+message ChargeAiAnalysisResponse {
+  bool Charged = 1;            // true on a repeat of a charged AnalysisId
+}
+
 service AcademyGamificationGrpcService {
   rpc GetStats(GetStatsRequest) returns (StatsGrpcModel);
   rpc OnLessonCompleted(OnLessonCompletedRequest) returns (OnLessonCompletedResponse);
@@ -230,6 +243,7 @@ service AcademyGamificationGrpcService {
   rpc GetDailyQuota(GetDailyQuotaRequest) returns (GetDailyQuotaResponse);
   rpc ConsumeDailyQuota(ConsumeDailyQuotaRequest) returns (ConsumeDailyQuotaResponse);
   rpc CreditAiAnalysis(CreditAiAnalysisRequest) returns (CreditAiAnalysisResponse);
+  rpc ChargeAiAnalysis(ChargeAiAnalysisRequest) returns (ChargeAiAnalysisResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

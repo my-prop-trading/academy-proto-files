@@ -42,6 +42,7 @@ message ChartAnalysisGrpcModel {
 message DailyUsageGrpcModel {
   int32 Used = 1;
   int32 DailyLimit = 2;
+  int64 ExtraPriceCoins = 3;   // coins per use over the limit; 0 when not for sale
 }
 
 message AiRewardGrpcModel {
@@ -53,6 +54,7 @@ message AnalyzeChartRequest {
   string ClientId = 1;
   bytes Image = 2;
   string MediaType = 3;        // image/png, image/jpeg or image/webp
+  bool PayWithCoins = 4;       // over the daily limit, pay ExtraPriceCoins for a stored analysis
 }
 
 enum AnalyzeChartStatusGrpc {
@@ -62,6 +64,7 @@ enum AnalyzeChartStatusGrpc {
   ANALYZE_CHART_AI_FAILURE = 3;        // limit not spent; safe to retry
   ANALYZE_CHART_NOT_CONFIGURED = 4;
   ANALYZE_CHART_INVALID_IMAGE = 5;     // unsupported type or empty
+  ANALYZE_CHART_NOT_ENOUGH_COINS = 6;  // over the limit with PayWithCoins; nothing charged
 }
 
 message AnalyzeChartResponse {
@@ -69,6 +72,7 @@ message AnalyzeChartResponse {
   optional ChartAnalysisGrpcModel Analysis = 2;  // set on OK
   DailyUsageGrpcModel Usage = 3;                 // after the call
   AiRewardGrpcModel Reward = 4;                  // credited by this call
+  int64 PaidCoins = 5;                           // debited by this call
 }
 
 message GetDailyUsageRequest {
