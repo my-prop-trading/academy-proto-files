@@ -105,11 +105,64 @@ message GetAnalysisImageResponse {
   optional AnalysisImageGrpcModel Image = 1;
 }
 
+// Mentor is one continuous chat per client about trading education and the product; it gives
+// no buy/sell advice or personal allocations. A question is stored only together with its answer.
+
+enum MentorRoleGrpc {
+  MENTOR_ROLE_USER = 0;
+  MENTOR_ROLE_ASSISTANT = 1;
+}
+
+message MentorMessageGrpcModel {
+  string Id = 1;
+  MentorRoleGrpc Role = 2;
+  string Text = 3;
+  repeated string HelpRefs = 4;  // help topics: cancel_subscription, refund, sign_in, about, charges
+  int64 CreatedAt = 5;
+}
+
+message SendMentorMessageRequest {
+  string ClientId = 1;
+  string Text = 2;
+}
+
+enum SendMentorMessageStatusGrpc {
+  SEND_MENTOR_MESSAGE_OK = 0;
+  SEND_MENTOR_MESSAGE_INVALID_TEXT = 1;    // empty or too long
+  SEND_MENTOR_MESSAGE_LIMIT_REACHED = 2;
+  SEND_MENTOR_MESSAGE_AI_FAILURE = 3;      // limit not spent, nothing stored; safe to retry
+  SEND_MENTOR_MESSAGE_NOT_CONFIGURED = 4;
+}
+
+message SendMentorMessageResponse {
+  SendMentorMessageStatusGrpc Status = 1;
+  optional MentorMessageGrpcModel Question = 2;  // set on OK
+  optional MentorMessageGrpcModel Answer = 3;    // set on OK
+  DailyUsageGrpcModel Usage = 4;                 // after the call
+}
+
+// Newest first.
+message ListMentorMessagesRequest {
+  string ClientId = 1;
+  int32 Limit = 2;
+  int32 Offset = 3;
+}
+
+message ListMentorMessagesResponse {
+  repeated MentorMessageGrpcModel Messages = 1;
+  int64 Total = 2;
+}
+
 service AcademyAiGrpcService {
   rpc AnalyzeChart(AnalyzeChartRequest) returns (AnalyzeChartResponse);
   rpc GetDailyUsage(GetDailyUsageRequest) returns (DailyUsageGrpcModel);
   rpc ListAnalyses(ListAnalysesRequest) returns (ListAnalysesResponse);
   rpc GetAnalysis(GetAnalysisRequest) returns (GetAnalysisResponse);
   rpc GetAnalysisImage(GetAnalysisRequest) returns (GetAnalysisImageResponse);
+
+  rpc SendMentorMessage(SendMentorMessageRequest) returns (SendMentorMessageResponse);
+  rpc GetMentorDailyUsage(GetDailyUsageRequest) returns (DailyUsageGrpcModel);
+  rpc ListMentorMessages(ListMentorMessagesRequest) returns (ListMentorMessagesResponse);
+
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

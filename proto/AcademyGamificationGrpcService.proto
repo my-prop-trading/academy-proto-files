@@ -179,6 +179,7 @@ message DeleteEarningRuleResponse {
 // Per-day allowances; the day is the client's local day (UTC when no timezone is stored).
 enum DailyQuotaKindGrpc {
   DAILY_QUOTA_KIND_AI_ANALYSIS = 0;
+  DAILY_QUOTA_KIND_MENTOR_MESSAGE = 1;
 }
 
 message GetDailyQuotaRequest {
