@@ -141,6 +141,10 @@ message SendMentorMessageResponse {
   DailyUsageGrpcModel Usage = 4;                 // after the call
 }
 
+message GetMentorDailyUsageRequest {
+  string ClientId = 1;
+}
+
 // Newest first.
 message ListMentorMessagesRequest {
   string ClientId = 1;
@@ -161,7 +165,7 @@ service AcademyAiGrpcService {
   rpc GetAnalysisImage(GetAnalysisRequest) returns (GetAnalysisImageResponse);
 
   rpc SendMentorMessage(SendMentorMessageRequest) returns (SendMentorMessageResponse);
-  rpc GetMentorDailyUsage(GetDailyUsageRequest) returns (DailyUsageGrpcModel);
+  rpc GetMentorDailyUsage(GetMentorDailyUsageRequest) returns (DailyUsageGrpcModel);
   rpc ListMentorMessages(ListMentorMessagesRequest) returns (ListMentorMessagesResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
