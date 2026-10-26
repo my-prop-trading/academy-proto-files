@@ -161,6 +161,89 @@ message ListMentorMessagesResponse {
   int64 Total = 2;
 }
 
+// Settings of the AI tools, edited in academy-admin; code defaults apply until first saved.
+message AiSettingsGrpcModel {
+  string AnalyzerModel = 1;              // one of GetAiSettingsResponse.Models
+  int32 AnalyzerDailyLimit = 2;
+  uint32 AnalyzerMaxTokens = 3;
+  int32 AnalysisRewardDailyCap = 4;      // free analyses of a day that earn the AI analysis reward
+  int64 AnalysisExtraPriceCoins = 5;     // per analysis over the daily limit; 0 takes it off sale
+  string MentorModel = 6;
+  int32 MentorDailyLimit = 7;
+  uint32 MentorMaxTokens = 8;
+  int32 MentorContextMessages = 9;       // latest chat messages sent with a new question
+}
+
+message GetAiSettingsResponse {
+  AiSettingsGrpcModel Settings = 1;
+  repeated string Models = 2;            // accepted model names
+  optional int64 UpdatedAt = 3;          // absent while code defaults apply
+}
+
+enum SetAiSettingsStatusGrpc {
+  SET_AI_SETTINGS_OK = 0;
+  SET_AI_SETTINGS_INVALID = 1;           // unknown model, negative value or zero max tokens
+}
+
+message SetAiSettingsResponse {
+  SetAiSettingsStatusGrpc Status = 1;
+}
+
+// One model call; CostUsd is computed from the tokens and the prices of the call.
+message LlmCallGrpcModel {
+  string Id = 1;
+  string ClientId = 2;
+  string Feature = 3;                    // chart_analysis or mentor
+  string Model = 4;
+  string PromptVersion = 5;
+  string Outcome = 6;                    // "ok", a refusal such as "not_a_chart", or the failure
+  optional string AnalysisId = 7;
+  optional string MessageId = 8;
+  int64 InputTokens = 9;
+  int64 OutputTokens = 10;
+  int64 CacheCreationInputTokens = 11;
+  int64 CacheReadInputTokens = 12;
+  double CostUsd = 13;
+  int64 LatencyMs = 14;
+  int64 CreatedAt = 15;
+}
+
+// Newest first; unset filters match every call.
+message ListLlmCallsRequest {
+  optional string ClientId = 1;
+  optional string Feature = 2;
+  optional bool Ok = 3;                  // true: outcome "ok"; false: any other outcome
+  optional int64 From = 4;               // created at or after
+  optional int64 To = 5;                 // created before
+  int32 Limit = 6;
+  int32 Offset = 7;
+}
+
+message ListLlmCallsResponse {
+  repeated LlmCallGrpcModel Calls = 1;
+  int64 Total = 2;
+}
+
+// Totals per UTC day and feature of the calls created in [From, To), newest day first.
+message GetLlmUsageRequest {
+  int64 From = 1;
+  int64 To = 2;
+}
+
+message LlmUsageGrpcModel {
+  string Day = 1;                        // YYYY-MM-DD, UTC
+  string Feature = 2;
+  int64 Calls = 3;
+  int64 OkCalls = 4;
+  int64 InputTokens = 5;                 // uncached, cache writes and cache reads together
+  int64 OutputTokens = 6;
+  double CostUsd = 7;
+}
+
+message GetLlmUsageResponse {
+  repeated LlmUsageGrpcModel Rows = 1;
+}
+
 service AcademyAiGrpcService {
   rpc AnalyzeChart(AnalyzeChartRequest) returns (AnalyzeChartResponse);
   rpc GetDailyUsage(GetDailyUsageRequest) returns (DailyUsageGrpcModel);
@@ -171,6 +254,11 @@ service AcademyAiGrpcService {
   rpc SendMentorMessage(SendMentorMessageRequest) returns (SendMentorMessageResponse);
   rpc GetMentorDailyUsage(GetMentorDailyUsageRequest) returns (DailyUsageGrpcModel);
   rpc ListMentorMessages(ListMentorMessagesRequest) returns (ListMentorMessagesResponse);
+
+  rpc GetAiSettings(google.protobuf.Empty) returns (GetAiSettingsResponse);
+  rpc SetAiSettings(AiSettingsGrpcModel) returns (SetAiSettingsResponse);
+  rpc ListLlmCalls(ListLlmCallsRequest) returns (ListLlmCallsResponse);
+  rpc GetLlmUsage(GetLlmUsageRequest) returns (GetLlmUsageResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
