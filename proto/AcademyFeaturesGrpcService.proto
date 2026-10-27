@@ -189,6 +189,43 @@ message GetClientFeaturesResponse {
   repeated ClientExperimentGrpcModel Experiments = 2; // running ones the client is in, and drafts it is pinned to
 }
 
+// Metrics of an experiment by variant over its exposed clients, pinned ones left out. A client
+// counts in a metric once the metric's window after its exposure has passed.
+message GetExperimentReportRequest {
+  string Id = 1;
+}
+
+enum MetricKindGrpc {
+  METRIC_KIND_RATE = 0;   // share of clients, 0..1
+  METRIC_KIND_MEAN = 1;   // mean per client
+}
+
+message MetricVariantGrpcModel {
+  string Variant = 1;
+  int64 Clients = 2;            // clients whose window has passed
+  double Value = 3;
+  optional double Diff = 4;     // Value minus the control's; absent for the control
+  optional double DiffLow = 5;  // 95% confidence interval of Diff
+  optional double DiffHigh = 6;
+  optional double PValue = 7;   // two-sided, against the control
+}
+
+message MetricGrpcModel {
+  string Key = 1;
+  string Name = 2;
+  MetricKindGrpc Kind = 3;
+  int32 WindowDays = 4;
+  bool HigherIsBetter = 5;
+  repeated MetricVariantGrpcModel Variants = 6;
+}
+
+message GetExperimentReportResponse {
+  optional ExperimentGrpcModel Experiment = 1;  // absent when not found
+  repeated MetricGrpcModel Metrics = 2;
+  double SrmPValue = 3;         // exposed counts against the weights; a tiny value means a broken split
+  int32 MinClients = 4;         // per variant and metric before the numbers are worth reading
+}
+
 service AcademyFeaturesGrpcService {
   rpc ListFeatures(google.protobuf.Empty) returns (ListFeaturesResponse);
   rpc SetFeatureEnabled(SetFeatureEnabledRequest) returns (FeatureUpdateResponse);
@@ -205,5 +242,6 @@ service AcademyFeaturesGrpcService {
   rpc DeleteExperiment(DeleteExperimentRequest) returns (ExperimentUpdateResponse);
   rpc SetForcedVariant(SetForcedVariantRequest) returns (ExperimentUpdateResponse);
   rpc ListForcedVariants(ListForcedVariantsRequest) returns (ListForcedVariantsResponse);
+  rpc GetExperimentReport(GetExperimentReportRequest) returns (GetExperimentReportResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
