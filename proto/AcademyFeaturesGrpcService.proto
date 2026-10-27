@@ -73,10 +73,137 @@ message ListChangesResponse {
   int64 Total = 2;
 }
 
+// Experiments split clients into variants that override feature switches and parameters.
+// A client is in an experiment when its stable bucket falls within Percent; the variant follows
+// the weights. A running experiment is frozen; two running experiments never change the same
+// switch or parameter, so a client can be in several at once.
+
+enum ExperimentStatusGrpc {
+  EXPERIMENT_DRAFT = 0;
+  EXPERIMENT_RUNNING = 1;
+  EXPERIMENT_STOPPED = 2;
+}
+
+// One change a variant makes: the feature switch when ParamKey is absent, else a parameter.
+message OverrideGrpcModel {
+  string FeatureKey = 1;
+  optional string ParamKey = 2;
+  string Value = 3;             // JSON; a bool for the switch
+}
+
+message VariantGrpcModel {
+  string Key = 1;
+  int32 Weight = 2;
+  repeated OverrideGrpcModel Overrides = 3;
+  int64 Exposed = 4;            // clients who used a changed feature in this variant; output only
+}
+
+message ExperimentGrpcModel {
+  string Id = 1;                // empty to create
+  string Key = 2;
+  string Name = 3;
+  string Hypothesis = 4;
+  ExperimentStatusGrpc Status = 5;           // output only
+  int32 Percent = 6;            // share of clients in the experiment, 0..100
+  repeated VariantGrpcModel Variants = 7;    // the first is the control and has no overrides
+  optional int64 StartedAt = 8;
+  optional int64 StoppedAt = 9;
+  int64 CreatedAt = 10;
+}
+
+message ListExperimentsResponse {
+  repeated ExperimentGrpcModel Experiments = 1;  // newest first
+}
+
+message GetExperimentRequest {
+  string Id = 1;
+}
+
+message GetExperimentResponse {
+  optional ExperimentGrpcModel Experiment = 1;
+}
+
+message StartExperimentRequest {
+  string Id = 1;
+}
+
+message StopExperimentRequest {
+  string Id = 1;
+  optional string RolloutVariant = 2;  // its overrides become the global values
+}
+
+message DeleteExperimentRequest {
+  string Id = 1;
+}
+
+// Pins a client to a variant, in a draft too; absent VariantKey unpins.
+message SetForcedVariantRequest {
+  string ExperimentId = 1;
+  string ClientId = 2;
+  optional string VariantKey = 3;
+}
+
+enum ExperimentUpdateStatusGrpc {
+  EXPERIMENT_UPDATE_OK = 0;
+  EXPERIMENT_UPDATE_NOT_FOUND = 1;
+  EXPERIMENT_UPDATE_INVALID = 2;       // see Error
+  EXPERIMENT_UPDATE_WRONG_STATUS = 3;  // the action does not apply in the current status
+  EXPERIMENT_UPDATE_CONFLICT = 4;      // a running experiment changes the same switch or parameter; see Error
+}
+
+message ExperimentUpdateResponse {
+  ExperimentUpdateStatusGrpc Status = 1;
+  string Error = 2;
+  optional ExperimentGrpcModel Experiment = 3;
+}
+
+message ForcedVariantGrpcModel {
+  string ClientId = 1;
+  string VariantKey = 2;
+  int64 CreatedAt = 3;
+}
+
+message ListForcedVariantsRequest {
+  string ExperimentId = 1;
+}
+
+message ListForcedVariantsResponse {
+  repeated ForcedVariantGrpcModel Forced = 1;
+}
+
+message GetClientFeaturesRequest {
+  string ClientId = 1;
+  optional string UsedFeature = 2;  // feature being served now: records the client in running experiments that change it
+}
+
+message ClientExperimentGrpcModel {
+  string ExperimentKey = 1;
+  ExperimentStatusGrpc Status = 2;
+  string VariantKey = 3;
+  bool Forced = 4;
+  optional int64 ExposedAt = 5;
+}
+
+message GetClientFeaturesResponse {
+  repeated FeatureGrpcModel Features = 1;            // after the overrides of the client's variants
+  repeated ClientExperimentGrpcModel Experiments = 2; // running ones the client is in, and drafts it is pinned to
+}
+
 service AcademyFeaturesGrpcService {
   rpc ListFeatures(google.protobuf.Empty) returns (ListFeaturesResponse);
   rpc SetFeatureEnabled(SetFeatureEnabledRequest) returns (FeatureUpdateResponse);
   rpc SetParam(SetParamRequest) returns (FeatureUpdateResponse);
   rpc ListChanges(ListChangesRequest) returns (ListChangesResponse);
+
+  rpc GetClientFeatures(GetClientFeaturesRequest) returns (GetClientFeaturesResponse);
+
+  rpc ListExperiments(google.protobuf.Empty) returns (ListExperimentsResponse);
+  rpc GetExperiment(GetExperimentRequest) returns (GetExperimentResponse);
+  rpc SaveExperiment(ExperimentGrpcModel) returns (ExperimentUpdateResponse);
+  rpc StartExperiment(StartExperimentRequest) returns (ExperimentUpdateResponse);
+  rpc StopExperiment(StopExperimentRequest) returns (ExperimentUpdateResponse);
+  rpc DeleteExperiment(DeleteExperimentRequest) returns (ExperimentUpdateResponse);
+  rpc SetForcedVariant(SetForcedVariantRequest) returns (ExperimentUpdateResponse);
+  rpc ListForcedVariants(ListForcedVariantsRequest) returns (ListForcedVariantsResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
