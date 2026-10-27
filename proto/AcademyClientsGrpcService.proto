@@ -120,6 +120,22 @@ message GetClientsCountResponse {
   int64 Total = 1;
 }
 
+// Window [From, To) in unix microseconds.
+message GetRegistrationsDailyRequest {
+  int64 From = 1;
+  int64 To = 2;
+}
+
+message RegistrationsDayGrpcModel {
+  int32 Day = 1;                // YYYYMMDD (UTC)
+  int64 Registered = 2;
+}
+
+// Days with at least one registration, oldest first.
+message GetRegistrationsDailyResponse {
+  repeated RegistrationsDayGrpcModel Days = 1;
+}
+
 enum SetExternalIdStatusGrpc {
   SET_EXTERNAL_ID_OK = 0;
   SET_EXTERNAL_ID_CLIENT_NOT_FOUND = 1;
@@ -258,6 +274,7 @@ service AcademyClientsGrpcService {
   rpc GetClientsByIds(GetClientsByIdsRequest) returns (GetClientsByIdsResponse);
   rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
   rpc GetClientsCount(google.protobuf.Empty) returns (GetClientsCountResponse);
+  rpc GetRegistrationsDaily(GetRegistrationsDailyRequest) returns (GetRegistrationsDailyResponse);
   rpc GenerateResetCode(GenerateResetCodeRequest) returns (GenerateResetCodeResponse);
   rpc ResetPasswordWithCode(ResetPasswordWithCodeRequest) returns (ResetPasswordWithCodeResponse);
   rpc SetExternalId(SetExternalIdRequest) returns (SetExternalIdResponse);

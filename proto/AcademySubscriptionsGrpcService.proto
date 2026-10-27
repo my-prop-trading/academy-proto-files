@@ -105,12 +105,47 @@ message ListSubscriptionsResponse {
   repeated AcademySubscriptionGrpcModel Subscriptions = 1;
 }
 
+// Current recurring amounts of active subscriptions in one currency, summed as charged
+// per billing period (no normalization to a month).
+message ActiveAmountGrpcModel {
+  string Currency = 1;
+  double Amount = 2;            // major units
+  int64 Subscriptions = 3;      // active subscriptions with this currency and an amount
+}
+
 message GetSubscriptionsStatsResponse {
   int64 Total = 1;
   int64 Active = 2;
   int64 Suspended = 3;
   int64 Cancelled = 4;
   int64 Blocked = 5;
+  repeated ActiveAmountGrpcModel ActiveAmounts = 6;
+}
+
+message GetLatestByClientIdsRequest {
+  repeated string ClientIds = 1;
+}
+
+// The latest subscription of each client that has one; clients without a subscription are left out.
+message GetLatestByClientIdsResponse {
+  repeated AcademySubscriptionGrpcModel Subscriptions = 1;
+}
+
+// Window [From, To) in unix microseconds.
+message GetSubscriptionsDailyRequest {
+  int64 From = 1;
+  int64 To = 2;
+}
+
+message SubscriptionsDayGrpcModel {
+  int32 Day = 1;                // YYYYMMDD (UTC)
+  int64 Created = 2;            // subscriptions first recorded that day
+  int64 Cancelled = 3;          // cancellations taking effect that day
+}
+
+// Days with at least one event, oldest first.
+message GetSubscriptionsDailyResponse {
+  repeated SubscriptionsDayGrpcModel Days = 1;
 }
 
 enum UpdateSubscriptionStatusGrpc {
@@ -154,5 +189,7 @@ service AcademySubscriptionsGrpcService {
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
   rpc GetSubscriptionsStats(google.protobuf.Empty) returns (GetSubscriptionsStatsResponse);
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
+  rpc GetLatestByClientIds(GetLatestByClientIdsRequest) returns (GetLatestByClientIdsResponse);
+  rpc GetSubscriptionsDaily(GetSubscriptionsDailyRequest) returns (GetSubscriptionsDailyResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
