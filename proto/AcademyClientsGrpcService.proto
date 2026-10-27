@@ -208,6 +208,46 @@ message ChangeEmailResponse {
   ChangeEmailStatusGrpc Status = 1;
 }
 
+// Display preferences and onboarding state; a client with none stored reads as all defaults.
+message ClientPreferencesGrpcModel {
+  bool LargeFont = 1;
+  bool CalmMode = 2;
+  optional int64 OnboardingCompletedAt = 3;  // absent until the onboarding is completed
+  optional string OnboardingAnswers = 4;     // JSON object as the client sent it
+}
+
+enum PreferencesStatusGrpc {
+  PREFERENCES_OK = 0;
+  PREFERENCES_CLIENT_NOT_FOUND = 1;
+}
+
+message GetPreferencesRequest {
+  string ClientId = 1;
+}
+
+// Absent fields stay unchanged.
+message UpdatePreferencesRequest {
+  string ClientId = 1;
+  optional bool LargeFont = 2;
+  optional bool CalmMode = 3;
+}
+
+// Marks the onboarding completed with Answers (a JSON object); a repeat keeps the first answers.
+message CompleteOnboardingRequest {
+  string ClientId = 1;
+  string Answers = 2;
+}
+
+// Clears the onboarding completion and answers, so the client goes through it again.
+message ResetOnboardingRequest {
+  string ClientId = 1;
+}
+
+message PreferencesResponse {
+  PreferencesStatusGrpc Status = 1;
+  ClientPreferencesGrpcModel Preferences = 2;  // state after the call; absent unless OK
+}
+
 service AcademyClientsGrpcService {
   rpc CreateClientIfNotExists(CreateClientIfNotExistsRequest) returns (CreateClientIfNotExistsResponse);
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse);
@@ -225,5 +265,9 @@ service AcademyClientsGrpcService {
   rpc ForceSetPassword(ForceSetPasswordRequest) returns (ForceSetPasswordResponse);
   rpc ChangeEmail(ChangeEmailRequest) returns (ChangeEmailResponse);
   rpc SetName(SetNameRequest) returns (SetNameResponse);
+  rpc GetPreferences(GetPreferencesRequest) returns (PreferencesResponse);
+  rpc UpdatePreferences(UpdatePreferencesRequest) returns (PreferencesResponse);
+  rpc CompleteOnboarding(CompleteOnboardingRequest) returns (PreferencesResponse);
+  rpc ResetOnboarding(ResetOnboardingRequest) returns (PreferencesResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
