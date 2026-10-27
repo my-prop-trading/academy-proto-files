@@ -7,10 +7,8 @@ import "google/protobuf/empty.proto";
 // Parameter values travel JSON-encoded and are validated against the parameter type.
 
 enum ParamTypeGrpc {
-  PARAM_TYPE_BOOL = 0;
-  PARAM_TYPE_INT = 1;
-  PARAM_TYPE_STRING = 2;
-  PARAM_TYPE_ENUM = 3;
+  PARAM_TYPE_INT = 0;
+  PARAM_TYPE_ENUM = 1;
 }
 
 message ParamGrpcModel {
