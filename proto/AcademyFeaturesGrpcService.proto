@@ -1,0 +1,84 @@
+syntax = "proto3";
+package academy_features;
+import "google/protobuf/empty.proto";
+
+// Feature switches and parameters of OneAcademy. A key is dot-separated (`shop.streak_freeze`):
+// a feature is effectively enabled only when it and every ancestor in the catalog are enabled.
+// Parameter values travel JSON-encoded and are validated against the parameter type.
+
+enum ParamTypeGrpc {
+  PARAM_TYPE_BOOL = 0;
+  PARAM_TYPE_INT = 1;
+  PARAM_TYPE_STRING = 2;
+  PARAM_TYPE_ENUM = 3;
+}
+
+message ParamGrpcModel {
+  string Key = 1;
+  ParamTypeGrpc Type = 2;
+  string Value = 3;             // current value, JSON
+  string DefaultValue = 4;      // code default, JSON
+  repeated string Options = 5;  // allowed values of an ENUM
+  optional int64 Min = 6;       // lower bound of an INT
+  bool ClientVisible = 7;       // returned to the app
+  string Description = 8;
+}
+
+message FeatureGrpcModel {
+  string Key = 1;
+  string Description = 2;
+  bool Enabled = 3;             // own switch
+  bool EffectiveEnabled = 4;    // own switch and every ancestor's
+  repeated ParamGrpcModel Params = 5;
+}
+
+message ListFeaturesResponse {
+  repeated FeatureGrpcModel Features = 1;
+}
+
+message SetFeatureEnabledRequest {
+  string Key = 1;
+  bool Enabled = 2;
+}
+
+message SetParamRequest {
+  string FeatureKey = 1;
+  string ParamKey = 2;
+  string Value = 3;             // JSON
+}
+
+enum FeatureUpdateStatusGrpc {
+  FEATURE_UPDATE_OK = 0;
+  FEATURE_UPDATE_NOT_FOUND = 1;       // no such feature or parameter in the catalog
+  FEATURE_UPDATE_INVALID_VALUE = 2;   // value does not match the parameter type
+}
+
+message FeatureUpdateResponse {
+  FeatureUpdateStatusGrpc Status = 1;
+}
+
+message FeatureChangeGrpcModel {
+  string FeatureKey = 1;
+  optional string ParamKey = 2; // absent for the feature switch
+  string OldValue = 3;          // JSON
+  string NewValue = 4;          // JSON
+  int64 ChangedAt = 5;
+}
+
+message ListChangesRequest {
+  int32 Limit = 1;
+  int32 Offset = 2;
+}
+
+message ListChangesResponse {
+  repeated FeatureChangeGrpcModel Changes = 1;  // newest first
+  int64 Total = 2;
+}
+
+service AcademyFeaturesGrpcService {
+  rpc ListFeatures(google.protobuf.Empty) returns (ListFeaturesResponse);
+  rpc SetFeatureEnabled(SetFeatureEnabledRequest) returns (FeatureUpdateResponse);
+  rpc SetParam(SetParamRequest) returns (FeatureUpdateResponse);
+  rpc ListChanges(ListChangesRequest) returns (ListChangesResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
