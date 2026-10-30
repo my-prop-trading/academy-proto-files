@@ -1,5 +1,6 @@
 syntax = "proto3";
 package academy_courses;
+import "google/protobuf/empty.proto";
 
 // Course content: sections (weeks) → days (each with a quiz) → lessons. Served by academy-lessons.
 // A lesson or quiz question id is "<course id>.<slug>": it never changes and is the lesson id of the
@@ -68,4 +69,5 @@ service AcademyCoursesGrpcService {
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
   rpc ImportCourse(ImportCourseRequest) returns (CourseWriteResponse);
   rpc SetCourseStatus(SetCourseStatusRequest) returns (CourseWriteResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
