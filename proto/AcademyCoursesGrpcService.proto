@@ -23,6 +23,7 @@ message CourseSummaryGrpcModel {
   int32 LessonsCount = 6;
   int64 UpdatedAt = 7;
   int32 Version = 8;
+  optional string Cover = 9;   // image URL or app path of the course card
 }
 
 message ListCoursesRequest {
@@ -115,6 +116,7 @@ message CreateCourseRequest {
   string Title = 2;
   string Description = 3;
   string Author = 4;
+  optional string Cover = 5;
 }
 
 message UpdateCourseRequest {
@@ -124,6 +126,7 @@ message UpdateCourseRequest {
   optional string Description = 4;
   optional CourseStatusGrpc Status = 5;
   string Author = 6;
+  optional string Cover = 7;   // empty removes the cover
 }
 
 // Version absent creates the item (its id must be new), present updates it.
