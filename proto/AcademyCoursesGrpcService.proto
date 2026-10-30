@@ -1,0 +1,71 @@
+syntax = "proto3";
+package academy_courses;
+
+// Course content: sections (weeks) → days (each with a quiz) → lessons. Served by academy-lessons.
+// A lesson or quiz question id is "<course id>.<slug>": it never changes and is the lesson id of the
+// progress API (AcademyLessonsGrpcService).
+
+enum CourseStatusGrpc {
+  COURSE_DRAFT = 0;       // hidden from clients
+  COURSE_PUBLISHED = 1;
+  COURSE_ARCHIVED = 2;    // hidden from clients; progress kept
+}
+
+message CourseSummaryGrpcModel {
+  string Id = 1;
+  string Title = 2;
+  string Description = 3;
+  CourseStatusGrpc Status = 4;
+  int32 DaysCount = 5;
+  int32 LessonsCount = 6;
+  int64 UpdatedAt = 7;
+}
+
+message ListCoursesRequest {
+  bool IncludeHidden = 1;   // also draft and archived courses
+}
+
+message ListCoursesResponse {
+  repeated CourseSummaryGrpcModel Courses = 1;
+}
+
+message GetCourseRequest {
+  string CourseId = 1;
+  bool IncludeHidden = 2;
+}
+
+message GetCourseResponse {
+  optional CourseSummaryGrpcModel Summary = 1;   // absent when not found
+  string DocumentJson = 2;   // the course in the course.schema.json format, ids in full
+}
+
+enum CourseWriteStatusGrpc {
+  COURSE_WRITE_OK = 0;
+  COURSE_WRITE_NOT_FOUND = 1;
+  COURSE_WRITE_ALREADY_EXISTS = 2;
+  COURSE_WRITE_INVALID = 3;   // see Error
+}
+
+message ImportCourseRequest {
+  string DocumentJson = 1;   // course.schema.json format; lesson and quiz ids as slugs or in full
+  CourseStatusGrpc Status = 2;
+  bool BuildLegacyIds = 3;   // also accept the frontend's positional and per-day progress ids
+}
+
+message CourseWriteResponse {
+  CourseWriteStatusGrpc Status = 1;
+  string Error = 2;
+  string CourseId = 3;
+}
+
+message SetCourseStatusRequest {
+  string CourseId = 1;
+  CourseStatusGrpc Status = 2;
+}
+
+service AcademyCoursesGrpcService {
+  rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse);
+  rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
+  rpc ImportCourse(ImportCourseRequest) returns (CourseWriteResponse);
+  rpc SetCourseStatus(SetCourseStatusRequest) returns (CourseWriteResponse);
+}

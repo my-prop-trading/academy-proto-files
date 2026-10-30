@@ -9,10 +9,22 @@ message AcademyLessonProgressGrpcModel {
   int64 CompletedAt = 4;
 }
 
+// Lesson ids: a lesson or quiz question id of a course ("<course id>.<slug>"), or a legacy
+// frontend id mapped to one at import. Once any course exists, other ids are refused.
+enum LessonIdStatusGrpc {
+  LESSON_ID_OK = 0;
+  LESSON_ID_NOT_FOUND = 1;
+}
+
 message MarkLessonCompletedRequest {
   string ClientId = 1;
   string LessonId = 2;
   map<string, string> Answers = 3;
+}
+
+message MarkLessonCompletedResponse {
+  LessonIdStatusGrpc Status = 1;
+  string LessonId = 2;   // course id the request id resolves to; the request id before any course exists
 }
 
 message GetCompletedLessonsRequest {
@@ -20,7 +32,7 @@ message GetCompletedLessonsRequest {
 }
 
 message GetCompletedLessonsResponse {
-  repeated string LessonIds = 1;
+  repeated string LessonIds = 1;   // ids as stored plus the course ids that stored legacy ids map to
 }
 
 message GetLessonProgressRequest {
@@ -36,6 +48,10 @@ message AddStudyTimeRequest {
   string ClientId = 1;
   string LessonId = 2;
   int32 Seconds = 3;   // active seconds to add (one heartbeat increment)
+}
+
+message AddStudyTimeResponse {
+  LessonIdStatusGrpc Status = 1;
 }
 
 message StudyTimeDayGrpcModel {
@@ -68,12 +84,19 @@ message GetLessonsRankResponse {
   int32 BetterThanPercent = 3; // % of learners who completed fewer lessons than this client (0..100)
 }
 
+// Rewrites stored legacy ids to course ids; repeatable.
+message MigrateLegacyProgressResponse {
+  int64 ProgressRows = 1;    // completion rows written under course ids
+  int64 StudyTimeRows = 2;   // study time rows written under course ids
+}
+
 service AcademyLessonsGrpcService {
-  rpc MarkLessonCompleted(MarkLessonCompletedRequest) returns (google.protobuf.Empty);
+  rpc MarkLessonCompleted(MarkLessonCompletedRequest) returns (MarkLessonCompletedResponse);
   rpc GetCompletedLessons(GetCompletedLessonsRequest) returns (GetCompletedLessonsResponse);
   rpc GetLessonProgress(GetLessonProgressRequest) returns (GetLessonProgressResponse);
-  rpc AddStudyTime(AddStudyTimeRequest) returns (google.protobuf.Empty);
+  rpc AddStudyTime(AddStudyTimeRequest) returns (AddStudyTimeResponse);
   rpc GetStudyTime(GetStudyTimeRequest) returns (GetStudyTimeResponse);
   rpc GetLessonsRank(GetLessonsRankRequest) returns (GetLessonsRankResponse);
+  rpc MigrateLegacyProgress(google.protobuf.Empty) returns (MigrateLegacyProgressResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
