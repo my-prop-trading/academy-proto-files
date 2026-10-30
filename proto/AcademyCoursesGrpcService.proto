@@ -4,7 +4,9 @@ import "google/protobuf/empty.proto";
 
 // Course content: sections (weeks) → days (each with a quiz) → lessons. Served by academy-lessons.
 // A lesson or quiz question id is "<course id>.<slug>": it never changes and is the lesson id of the
-// progress API (AcademyLessonsGrpcService).
+// progress API (AcademyLessonsGrpcService). Sections and days have ids of the same form.
+// Clients see published courses without archived items; editor calls see everything, and every
+// editor write takes the version it read and is refused with CONFLICT when the item changed since.
 
 enum CourseStatusGrpc {
   COURSE_DRAFT = 0;       // hidden from clients
@@ -20,6 +22,7 @@ message CourseSummaryGrpcModel {
   int32 DaysCount = 5;
   int32 LessonsCount = 6;
   int64 UpdatedAt = 7;
+  int32 Version = 8;
 }
 
 message ListCoursesRequest {
@@ -45,23 +48,148 @@ enum CourseWriteStatusGrpc {
   COURSE_WRITE_NOT_FOUND = 1;
   COURSE_WRITE_ALREADY_EXISTS = 2;
   COURSE_WRITE_INVALID = 3;   // see Error
+  COURSE_WRITE_CONFLICT = 4;  // the version is not the current one; read again
 }
 
 message ImportCourseRequest {
   string DocumentJson = 1;   // course.schema.json format; lesson and quiz ids as slugs or in full
   CourseStatusGrpc Status = 2;
   bool BuildLegacyIds = 3;   // also accept the frontend's positional and per-day progress ids
+  string Author = 4;
 }
 
 message CourseWriteResponse {
   CourseWriteStatusGrpc Status = 1;
   string Error = 2;
   string CourseId = 3;
+  string ItemId = 4;    // the item written
+  int32 Version = 5;    // its version after the write
 }
 
 message SetCourseStatusRequest {
   string CourseId = 1;
   CourseStatusGrpc Status = 2;
+  string Author = 3;
+}
+
+// The course content the frontend shipped before the backend served courses, built into the
+// service; imported with legacy ids, courses that exist are skipped.
+message ImportFrontendCoursesRequest {
+  string Author = 1;
+}
+
+message ImportFrontendCoursesResponse {
+  repeated CourseWriteResponse Courses = 1;
+}
+
+enum CourseItemKindGrpc {
+  COURSE_ITEM_COURSE = 0;
+  COURSE_ITEM_SECTION = 1;
+  COURSE_ITEM_DAY = 2;
+  COURSE_ITEM_LESSON = 3;
+}
+
+message GetCourseOutlineRequest {
+  string CourseId = 1;
+}
+
+// Every section, day and lesson with archived flags and versions; day quizzes in full, lesson
+// bodies as counts: {id, title, description, status, version, sections: [{id, title, label,
+// archived, version, days: [{id, title, subtitle, archived, version, quiz, lessons: [{id, title,
+// durationMin, archived, version, blocks, question}]}]}]}.
+message GetCourseOutlineResponse {
+  optional CourseSummaryGrpcModel Summary = 1;   // absent when not found
+  string OutlineJson = 2;
+}
+
+message GetLessonRequest {
+  string LessonId = 1;
+}
+
+// {id, courseId, dayId, title, durationMin, blocks, question, archived, version}; empty when not found.
+message GetLessonResponse {
+  string LessonJson = 1;
+}
+
+message UpdateCourseRequest {
+  string CourseId = 1;
+  int32 Version = 2;
+  optional string Title = 3;
+  optional string Description = 4;
+  optional CourseStatusGrpc Status = 5;
+  string Author = 6;
+}
+
+// Version absent creates the item (its id must be new), present updates it.
+message SaveSectionRequest {
+  string CourseId = 1;
+  string SectionJson = 2;   // {id, title, label?}
+  optional int32 Version = 3;
+  string Author = 4;
+}
+
+message SaveDayRequest {
+  string CourseId = 1;
+  string DayJson = 2;       // {id, title, subtitle?, quiz: [{id?, question, options, correctIndex, explanation}]}
+  optional string SectionId = 3;   // where a new day goes, last; ignored on update
+  optional int32 Version = 4;
+  string Author = 5;
+}
+
+message SaveLessonRequest {
+  string CourseId = 1;
+  string LessonJson = 2;    // {id, title, durationMin?, blocks, question?}
+  optional string DayId = 3;       // where a new lesson goes, last; ignored on update
+  optional int32 Version = 4;
+  string Author = 5;
+}
+
+message MoveItemRequest {
+  string CourseId = 1;
+  CourseItemKindGrpc Kind = 2;     // section, day or lesson
+  string ItemId = 3;
+  optional string ParentId = 4;    // new section of a day or day of a lesson; absent keeps it
+  int32 Position = 5;              // 0-based among the parent's items in the outline
+  string Author = 6;
+}
+
+message SetArchivedRequest {
+  string CourseId = 1;
+  CourseItemKindGrpc Kind = 2;     // section, day or lesson
+  string ItemId = 3;
+  bool Archived = 4;
+  string Author = 5;
+}
+
+enum CourseChangeActionGrpc {
+  COURSE_CHANGE_CREATE = 0;
+  COURSE_CHANGE_UPDATE = 1;
+  COURSE_CHANGE_MOVE = 2;
+  COURSE_CHANGE_ARCHIVE = 3;
+  COURSE_CHANGE_RESTORE = 4;
+  COURSE_CHANGE_IMPORT = 5;
+}
+
+message CourseChangeGrpcModel {
+  string Id = 1;
+  string CourseId = 2;
+  CourseItemKindGrpc Kind = 3;
+  string ItemId = 4;
+  CourseChangeActionGrpc Action = 5;
+  string BeforeJson = 6;   // the item before the change; empty on create and import
+  string AfterJson = 7;
+  string Author = 8;
+  int64 CreatedAt = 9;
+}
+
+message ListCourseChangesRequest {
+  optional string CourseId = 1;
+  int32 Limit = 2;
+  int32 Offset = 3;
+}
+
+message ListCourseChangesResponse {
+  repeated CourseChangeGrpcModel Changes = 1;   // newest first
 }
 
 service AcademyCoursesGrpcService {
@@ -69,5 +197,15 @@ service AcademyCoursesGrpcService {
   rpc GetCourse(GetCourseRequest) returns (GetCourseResponse);
   rpc ImportCourse(ImportCourseRequest) returns (CourseWriteResponse);
   rpc SetCourseStatus(SetCourseStatusRequest) returns (CourseWriteResponse);
+  rpc ImportFrontendCourses(ImportFrontendCoursesRequest) returns (ImportFrontendCoursesResponse);
+  rpc GetCourseOutline(GetCourseOutlineRequest) returns (GetCourseOutlineResponse);
+  rpc GetLesson(GetLessonRequest) returns (GetLessonResponse);
+  rpc UpdateCourse(UpdateCourseRequest) returns (CourseWriteResponse);
+  rpc SaveSection(SaveSectionRequest) returns (CourseWriteResponse);
+  rpc SaveDay(SaveDayRequest) returns (CourseWriteResponse);
+  rpc SaveLesson(SaveLessonRequest) returns (CourseWriteResponse);
+  rpc MoveItem(MoveItemRequest) returns (CourseWriteResponse);
+  rpc SetArchived(SetArchivedRequest) returns (CourseWriteResponse);
+  rpc ListCourseChanges(ListCourseChangesRequest) returns (ListCourseChangesResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
