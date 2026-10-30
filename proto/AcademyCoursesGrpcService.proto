@@ -109,6 +109,14 @@ message GetLessonResponse {
   string LessonJson = 1;
 }
 
+// An empty draft course, filled in by the other editor calls.
+message CreateCourseRequest {
+  string CourseId = 1;   // slug
+  string Title = 2;
+  string Description = 3;
+  string Author = 4;
+}
+
 message UpdateCourseRequest {
   string CourseId = 1;
   int32 Version = 2;
@@ -198,6 +206,7 @@ service AcademyCoursesGrpcService {
   rpc ImportFrontendCourses(ImportFrontendCoursesRequest) returns (ImportFrontendCoursesResponse);
   rpc GetCourseOutline(GetCourseOutlineRequest) returns (GetCourseOutlineResponse);
   rpc GetLesson(GetLessonRequest) returns (GetLessonResponse);
+  rpc CreateCourse(CreateCourseRequest) returns (CourseWriteResponse);
   rpc UpdateCourse(UpdateCourseRequest) returns (CourseWriteResponse);
   rpc SaveSection(SaveSectionRequest) returns (CourseWriteResponse);
   rpc SaveDay(SaveDayRequest) returns (CourseWriteResponse);
