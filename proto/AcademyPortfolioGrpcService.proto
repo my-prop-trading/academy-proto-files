@@ -27,6 +27,8 @@ message AcademyPortfolioAssetGrpcModel {
   int64 UpdatedAt = 10;
   AssetTypeGrpc Type = 11;
   optional string PriceSource = 12; // "manual" or the feed provider id
+  optional string Description = 13;
+  optional string Icon = 14;         // image URL or app path
 }
 
 enum AcademyTradeSideGrpc {
@@ -70,6 +72,8 @@ message CreateAssetRequest {
   int32 Decimals = 3;
   int32 SortOrder = 4;
   AssetTypeGrpc Type = 5;
+  optional string Description = 6;
+  optional string Icon = 7;
 }
 
 enum AssetStatusGrpc {
@@ -91,6 +95,8 @@ message UpdateAssetRequest {
   bool Enabled = 4;
   int32 SortOrder = 5;
   AssetTypeGrpc Type = 6;
+  optional string Description = 7;   // absent keeps, empty removes
+  optional string Icon = 8;          // absent keeps, empty removes
 }
 
 message UpdateAssetResponse {
