@@ -1,0 +1,41 @@
+syntax = "proto3";
+package academy_media;
+import "google/protobuf/empty.proto";
+
+// Images for any Academy entity; an entity keeps the returned URL in its own field.
+// An upload is re-encoded and keyed by its content, so a key always names the same bytes.
+// Storage that is not configured answers UNAVAILABLE.
+
+message UploadImageRequest {
+  bytes Content = 1;           // PNG, JPEG or WebP
+  int32 MaxSide = 2;           // longer side after resizing, px; 0 keeps the size
+}
+
+enum UploadImageStatusGrpc {
+  UPLOAD_IMAGE_OK = 0;
+  UPLOAD_IMAGE_NOT_AN_IMAGE = 1;   // not a PNG, JPEG or WebP
+  UPLOAD_IMAGE_TOO_LARGE = 2;      // over the byte or pixel limit
+}
+
+message UploadImageResponse {
+  UploadImageStatusGrpc Status = 1;
+  string Key = 2;              // file name of the stored image
+  string Url = 3;              // public URL of the image
+  int32 Width = 4;
+  int32 Height = 5;
+}
+
+message GetImageRequest {
+  string Key = 1;
+}
+
+message GetImageResponse {
+  optional bytes Content = 1;  // absent when no image has the key
+  string ContentType = 2;
+}
+
+service AcademyMediaGrpcService {
+  rpc UploadImage(UploadImageRequest) returns (UploadImageResponse);
+  rpc GetImage(GetImageRequest) returns (GetImageResponse);
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
