@@ -24,8 +24,25 @@ message FeedStatusGrpcModel {
 // Runs a cycle now instead of waiting for the timer.
 message RefreshNowRequest {}
 
+message SetManualPriceRequest {
+  string AssetId = 1;
+  string Price = 2;                // positive decimal
+}
+
+enum SetManualPriceStatusGrpc {
+  SET_MANUAL_PRICE_OK = 0;
+  SET_MANUAL_PRICE_ASSET_NOT_FOUND = 1;
+  SET_MANUAL_PRICE_INVALID = 2;
+}
+
+message SetManualPriceResponse {
+  SetManualPriceStatusGrpc Status = 1;
+}
+
 service AcademyPricesGrpcService {
   rpc GetFeedStatus(google.protobuf.Empty) returns (FeedStatusGrpcModel);
   rpc RefreshNow(RefreshNowRequest) returns (FeedStatusGrpcModel);
+  // Stores a manual price in the portfolio and records it in the asset's candles.
+  rpc SetManualPrice(SetManualPriceRequest) returns (SetManualPriceResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
