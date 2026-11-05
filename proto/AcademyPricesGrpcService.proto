@@ -39,10 +39,40 @@ message SetManualPriceResponse {
   SetManualPriceStatusGrpc Status = 1;
 }
 
+enum CandleTimeframeGrpc {
+  CANDLE_TIMEFRAME_M5 = 0;
+  CANDLE_TIMEFRAME_H1 = 1;
+  CANDLE_TIMEFRAME_H4 = 2;
+  CANDLE_TIMEFRAME_D1 = 3;
+}
+
+message GetCandlesRequest {
+  string AssetId = 1;
+  CandleTimeframeGrpc Timeframe = 2;
+  optional int64 Before = 3;       // candles opened before it; absent up to the current one
+  uint32 Limit = 4;                // 0 or above the maximum means the maximum
+}
+
+// OHLC of a bucket starting at OpenTime; prices are positive decimals.
+message CandleGrpcModel {
+  int64 OpenTime = 1;
+  string Open = 2;
+  string High = 3;
+  string Low = 4;
+  string Close = 5;
+}
+
+message GetCandlesResponse {
+  repeated CandleGrpcModel Candles = 1;   // oldest first
+  optional int64 NextBefore = 2;          // Before of the older page; absent when there is none
+}
+
 service AcademyPricesGrpcService {
   rpc GetFeedStatus(google.protobuf.Empty) returns (FeedStatusGrpcModel);
   rpc RefreshNow(RefreshNowRequest) returns (FeedStatusGrpcModel);
   // Stores a manual price in the portfolio and records it in the asset's candles.
   rpc SetManualPrice(SetManualPriceRequest) returns (SetManualPriceResponse);
+  // A page of an asset's candles; a bucket without a stored price repeats the previous close.
+  rpc GetCandles(GetCandlesRequest) returns (GetCandlesResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
