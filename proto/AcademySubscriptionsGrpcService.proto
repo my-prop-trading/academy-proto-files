@@ -191,6 +191,7 @@ enum AcademyOrderStatusGrpc {
   ORDER_DECLINED = 3;
   ORDER_FAILED = 4;           // the provider refused the request or it was abandoned; see Error
   ORDER_REFUNDED = 5;         // the product is taken back
+  ORDER_AWAITING_PAYMENT = 6; // waits for the customer to pay in the payment form
 }
 
 message AcademyOrderGrpcModel {
@@ -207,8 +208,8 @@ message AcademyOrderGrpcModel {
   optional int64 PaidAt = 11;
 }
 
-// Charges the card of the client's subscription; an unfinished order of the same product is
-// returned instead of a second charge.
+// Charges the card of the client's subscription, or, without a card to charge, opens an order to
+// pay in the payment form; an unfinished order of the same product is returned instead of a new one.
 message BuyProductRequest {
   string ClientId = 1;
   string ProductCode = 2;
@@ -219,13 +220,21 @@ enum BuyProductStatusGrpc {
   BUY_PRODUCT_SENT = 0;            // see Order
   BUY_PRODUCT_NOT_FOUND = 1;       // no such product on sale
   BUY_PRODUCT_ALREADY_OWNED = 2;
-  BUY_PRODUCT_FORM_REQUIRED = 3;   // no card to charge in one click
+  BUY_PRODUCT_FORM_REQUIRED = 3;   // not returned: an order to pay in the form is SENT with Form
   BUY_PRODUCT_NOT_CONFIGURED = 4;  // products are unavailable in this environment
+}
+
+// The data the provider's payment form is initialized with.
+message PaymentFormGrpcModel {
+  string Merchant = 1;
+  string PaymentIntent = 2;
+  string Signature = 3;
 }
 
 message BuyProductResponse {
   BuyProductStatusGrpc Status = 1;
   optional AcademyOrderGrpcModel Order = 2;
+  optional PaymentFormGrpcModel Form = 3;  // with an order awaiting payment
 }
 
 // An order of the client, with its status refreshed from the provider while unfinished.
