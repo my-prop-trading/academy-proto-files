@@ -226,6 +226,80 @@ message GetExperimentReportResponse {
   int32 MinClients = 4;         // per variant and metric before the numbers are worth reading
 }
 
+// Products are paid add-ons. A client who owns a product gets its overrides on top of the global
+// values and its experiment variants; a product taken off sale stays with its owners.
+
+message ProductGrpcModel {
+  string Code = 1;
+  string Title = 2;
+  int64 Amount = 3;             // price in the smallest currency unit
+  string Currency = 4;          // ISO-4217
+  string SolidgateProductId = 5;
+  bool Active = 6;              // on sale
+  repeated OverrideGrpcModel Overrides = 7;
+  int64 CreatedAt = 8;          // output only
+  int64 UpdatedAt = 9;          // output only
+}
+
+message ListProductsResponse {
+  repeated ProductGrpcModel Products = 1;
+}
+
+message GetProductRequest {
+  string Code = 1;
+}
+
+message GetProductResponse {
+  optional ProductGrpcModel Product = 1;
+}
+
+enum ProductUpdateStatusGrpc {
+  PRODUCT_UPDATE_OK = 0;
+  PRODUCT_UPDATE_NOT_FOUND = 1;
+  PRODUCT_UPDATE_INVALID = 2;   // see Error
+}
+
+message ProductUpdateResponse {
+  ProductUpdateStatusGrpc Status = 1;
+  string Error = 2;
+  optional ProductGrpcModel Product = 3;
+}
+
+enum ProductGrantSourceGrpc {
+  PRODUCT_GRANT_PURCHASE = 0;
+  PRODUCT_GRANT_MANUAL = 1;
+}
+
+message ClientProductGrpcModel {
+  string ClientId = 1;
+  string ProductCode = 2;
+  ProductGrantSourceGrpc Source = 3;
+  optional string OrderId = 4;  // the purchase that granted it
+  int64 GrantedAt = 5;
+  optional int64 RevokedAt = 6; // set while the client does not own it
+}
+
+// Gives a product to a client; granting an owned product again only refreshes the source.
+message GrantProductRequest {
+  string ClientId = 1;
+  string ProductCode = 2;
+  ProductGrantSourceGrpc Source = 3;
+  optional string OrderId = 4;
+}
+
+message RevokeProductRequest {
+  string ClientId = 1;
+  string ProductCode = 2;
+}
+
+message ListClientProductsRequest {
+  string ClientId = 1;
+}
+
+message ListClientProductsResponse {
+  repeated ClientProductGrpcModel Products = 1;  // revoked ones included
+}
+
 service AcademyFeaturesGrpcService {
   rpc ListFeatures(google.protobuf.Empty) returns (ListFeaturesResponse);
   rpc SetFeatureEnabled(SetFeatureEnabledRequest) returns (FeatureUpdateResponse);
@@ -243,5 +317,13 @@ service AcademyFeaturesGrpcService {
   rpc SetForcedVariant(SetForcedVariantRequest) returns (ExperimentUpdateResponse);
   rpc ListForcedVariants(ListForcedVariantsRequest) returns (ListForcedVariantsResponse);
   rpc GetExperimentReport(GetExperimentReportRequest) returns (GetExperimentReportResponse);
+
+  rpc ListProducts(google.protobuf.Empty) returns (ListProductsResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc SaveProduct(ProductGrpcModel) returns (ProductUpdateResponse);
+  rpc GrantProduct(GrantProductRequest) returns (ProductUpdateResponse);
+  rpc RevokeProduct(RevokeProductRequest) returns (ProductUpdateResponse);
+  rpc ListClientProducts(ListClientProductsRequest) returns (ListClientProductsResponse);
+
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
