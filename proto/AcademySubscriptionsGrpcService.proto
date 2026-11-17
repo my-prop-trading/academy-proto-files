@@ -181,6 +181,71 @@ message UpdateSubscriptionResponse {
   optional AcademySubscriptionGrpcModel Subscription = 2;
 }
 
+// Orders: products (paid add-ons) bought with money. A paid order grants its product through the
+// features service; a refunded one takes it back.
+
+enum AcademyOrderStatusGrpc {
+  ORDER_PROCESSING = 0;       // the provider has not decided yet
+  ORDER_THREE_DS_VERIFY = 1;  // waits for the customer at VerifyUrl
+  ORDER_PAID = 2;             // the product is granted
+  ORDER_DECLINED = 3;
+  ORDER_FAILED = 4;           // the provider refused the request or it was abandoned; see Error
+  ORDER_REFUNDED = 5;         // the product is taken back
+}
+
+message AcademyOrderGrpcModel {
+  string Id = 1;
+  string ClientId = 2;
+  string ProductCode = 3;
+  int64 Amount = 4;           // smallest currency unit
+  string Currency = 5;
+  AcademyOrderStatusGrpc Status = 6;
+  optional string VerifyUrl = 7;
+  optional string Error = 8;
+  int64 CreatedAt = 9;
+  int64 UpdatedAt = 10;
+  optional int64 PaidAt = 11;
+}
+
+// Charges the card of the client's subscription; an unfinished order of the same product is
+// returned instead of a second charge.
+message BuyProductRequest {
+  string ClientId = 1;
+  string ProductCode = 2;
+  string Ip = 3;
+}
+
+enum BuyProductStatusGrpc {
+  BUY_PRODUCT_SENT = 0;            // see Order
+  BUY_PRODUCT_NOT_FOUND = 1;       // no such product on sale
+  BUY_PRODUCT_ALREADY_OWNED = 2;
+  BUY_PRODUCT_FORM_REQUIRED = 3;   // no card to charge in one click
+  BUY_PRODUCT_NOT_CONFIGURED = 4;  // products are unavailable in this environment
+}
+
+message BuyProductResponse {
+  BuyProductStatusGrpc Status = 1;
+  optional AcademyOrderGrpcModel Order = 2;
+}
+
+// An order of the client, with its status refreshed from the provider while unfinished.
+message GetOrderRequest {
+  string ClientId = 1;
+  string OrderId = 2;
+}
+
+message GetOrderResponse {
+  optional AcademyOrderGrpcModel Order = 1;
+}
+
+message ListOrdersRequest {
+  string ClientId = 1;
+}
+
+message ListOrdersResponse {
+  repeated AcademyOrderGrpcModel Orders = 1;  // newest first
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
@@ -191,5 +256,8 @@ service AcademySubscriptionsGrpcService {
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
   rpc GetLatestByClientIds(GetLatestByClientIdsRequest) returns (GetLatestByClientIdsResponse);
   rpc GetSubscriptionsDaily(GetSubscriptionsDailyRequest) returns (GetSubscriptionsDailyResponse);
+  rpc BuyProduct(BuyProductRequest) returns (BuyProductResponse);
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
