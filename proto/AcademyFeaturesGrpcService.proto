@@ -239,6 +239,15 @@ message ProductGrpcModel {
   repeated OverrideGrpcModel Overrides = 7;
   int64 CreatedAt = 8;          // output only
   int64 UpdatedAt = 9;          // output only
+  repeated ProductOfferGrpcModel Offers = 10;
+}
+
+// A price the product sells for at one place of the funnel; the product's Amount is its full price.
+message ProductOfferGrpcModel {
+  string Code = 1;
+  int64 Amount = 2;             // smallest unit of the product's currency
+  string SolidgateProductId = 3;
+  bool Active = 4;              // on sale
 }
 
 message ListProductsResponse {

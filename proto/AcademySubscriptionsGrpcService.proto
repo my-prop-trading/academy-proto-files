@@ -206,14 +206,17 @@ message AcademyOrderGrpcModel {
   int64 CreatedAt = 9;
   int64 UpdatedAt = 10;
   optional int64 PaidAt = 11;
+  optional string OfferCode = 12;  // absent: bought at the product's full price
 }
 
 // Charges the card of the client's subscription, or, without a card to charge, opens an order to
-// pay in the payment form; an unfinished order of the same product is returned instead of a new one.
+// pay in the payment form; an unfinished order of the same product is returned instead of a new one,
+// except one awaiting payment at another offer, which fails as replaced.
 message BuyProductRequest {
   string ClientId = 1;
   string ProductCode = 2;
   string Ip = 3;
+  optional string OfferCode = 4;   // absent: the product's full price
 }
 
 enum BuyProductStatusGrpc {
@@ -222,6 +225,7 @@ enum BuyProductStatusGrpc {
   BUY_PRODUCT_ALREADY_OWNED = 2;
   BUY_PRODUCT_FORM_REQUIRED = 3;   // not returned: an order to pay in the form is SENT with Form
   BUY_PRODUCT_NOT_CONFIGURED = 4;  // products are unavailable in this environment
+  BUY_PRODUCT_OFFER_NOT_FOUND = 5; // the product has no such offer on sale
 }
 
 // The data the provider's payment form is initialized with.
