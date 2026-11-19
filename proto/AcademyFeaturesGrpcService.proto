@@ -309,6 +309,25 @@ message ListClientProductsResponse {
   repeated ClientProductGrpcModel Products = 1;  // revoked ones included
 }
 
+// Events: what clients do in the app, kept for funnel analytics.
+
+enum TrackEventStatusGrpc {
+  TRACK_EVENT_OK = 0;
+  TRACK_EVENT_INVALID = 1;      // see Error
+}
+
+message TrackEventRequest {
+  string ClientId = 1;
+  string Event = 2;             // lowercase letters, digits and _
+  string Params = 3;            // JSON object; empty for none
+  optional string Country = 4;  // ISO 3166-1 alpha-2 of the request
+}
+
+message TrackEventResponse {
+  TrackEventStatusGrpc Status = 1;
+  string Error = 2;
+}
+
 service AcademyFeaturesGrpcService {
   rpc ListFeatures(google.protobuf.Empty) returns (ListFeaturesResponse);
   rpc SetFeatureEnabled(SetFeatureEnabledRequest) returns (FeatureUpdateResponse);
@@ -333,6 +352,8 @@ service AcademyFeaturesGrpcService {
   rpc GrantProduct(GrantProductRequest) returns (ProductUpdateResponse);
   rpc RevokeProduct(RevokeProductRequest) returns (ProductUpdateResponse);
   rpc ListClientProducts(ListClientProductsRequest) returns (ListClientProductsResponse);
+
+  rpc TrackEvent(TrackEventRequest) returns (TrackEventResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
