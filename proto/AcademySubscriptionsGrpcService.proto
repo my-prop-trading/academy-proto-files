@@ -207,6 +207,7 @@ message AcademyOrderGrpcModel {
   int64 UpdatedAt = 10;
   optional int64 PaidAt = 11;
   optional string OfferCode = 12;  // absent: bought at the product's full price
+  optional string PaymentMethod = 13;  // card, apple-pay, google-pay, ...; known once paid
 }
 
 // Charges the card of the client's subscription, or, without a card to charge, opens an order to
@@ -217,6 +218,8 @@ message BuyProductRequest {
   string ProductCode = 2;
   string Ip = 3;
   optional string OfferCode = 4;   // absent: the product's full price
+  optional string Language = 5;    // of the payment form and the receipt, 2-3 letters; absent: en
+  bool PayInForm = 6;              // the payment form even with a card to charge
 }
 
 enum BuyProductStatusGrpc {
