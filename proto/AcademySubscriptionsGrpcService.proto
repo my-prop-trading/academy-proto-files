@@ -262,6 +262,33 @@ message ListOrdersResponse {
   repeated AcademyOrderGrpcModel Orders = 1;  // newest first
 }
 
+// Orders of every client; a filter left out matches all.
+message SearchOrdersRequest {
+  int32 Limit = 1;
+  int32 Offset = 2;
+  optional AcademyOrderStatusGrpc Status = 3;
+  optional string ProductCode = 4;
+  optional string OfferCode = 5;
+  optional string ClientId = 6;
+  optional int64 CreatedFrom = 7;  // unix microseconds, inclusive
+  optional int64 CreatedTo = 8;    // unix microseconds, exclusive
+}
+
+// Money of the matching orders in one currency, smallest currency unit.
+message OrdersTotalGrpcModel {
+  string Currency = 1;
+  int64 Paid = 2;            // orders paid at some point: paid and refunded
+  int64 Refunded = 3;
+  int64 PaidOrders = 4;
+  int64 RefundedOrders = 5;
+}
+
+message SearchOrdersResponse {
+  repeated AcademyOrderGrpcModel Orders = 1;   // the page, newest first
+  int64 Total = 2;                             // matching orders
+  repeated OrdersTotalGrpcModel Totals = 3;    // over every matching order, ordered by currency
+}
+
 service AcademySubscriptionsGrpcService {
   rpc GetByClientId(GetByClientIdRequest) returns (GetSubscriptionResponse);
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse);
@@ -275,5 +302,6 @@ service AcademySubscriptionsGrpcService {
   rpc BuyProduct(BuyProductRequest) returns (BuyProductResponse);
   rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
   rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc SearchOrders(SearchOrdersRequest) returns (SearchOrdersResponse);
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
