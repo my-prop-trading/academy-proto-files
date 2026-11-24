@@ -73,6 +73,7 @@ message AnalyzeChartResponse {
   DailyUsageGrpcModel Usage = 3;                 // after the call
   AiRewardGrpcModel Reward = 4;                  // credited by this call
   int64 PaidCoins = 5;                           // debited by this call
+  optional string NotChartReason = 6;            // set on NOT_A_CHART: what the image shows instead
 }
 
 message GetDailyUsageRequest {
@@ -178,6 +179,8 @@ message LlmCallGrpcModel {
   double CostUsd = 13;
   int64 LatencyMs = 14;
   int64 CreatedAt = 15;
+  optional string Reason = 16;           // why the model refused the request
+  bool HasImage = 17;                    // the image of a refused analysis is stored
 }
 
 // Newest first; unset filters match every call.
@@ -197,6 +200,10 @@ message ListLlmCallsResponse {
 }
 
 // Totals per UTC day and feature of the calls created in [From, To), newest day first.
+message GetLlmCallImageRequest {
+  string Id = 1;
+}
+
 message GetLlmUsageRequest {
   int64 From = 1;
   int64 To = 2;
@@ -229,6 +236,7 @@ service AcademyAiGrpcService {
 
   rpc ListLlmCalls(ListLlmCallsRequest) returns (ListLlmCallsResponse);
   rpc GetLlmUsage(GetLlmUsageRequest) returns (GetLlmUsageResponse);
+  rpc GetLlmCallImage(GetLlmCallImageRequest) returns (GetAnalysisImageResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
