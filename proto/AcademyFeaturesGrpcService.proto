@@ -328,6 +328,48 @@ message TrackEventResponse {
   string Error = 2;
 }
 
+message EventGrpcModel {
+  string Id = 1;
+  string ClientId = 2;
+  string Event = 3;
+  string Params = 4;            // JSON object
+  optional string Country = 5;
+  int64 CreatedAt = 6;
+}
+
+// An unset filter matches every event.
+message ListEventsRequest {
+  optional string ClientId = 1;
+  optional string Event = 2;
+  optional int64 From = 3;      // created at or after
+  optional int64 To = 4;        // created before
+  int32 Limit = 5;
+  int32 Offset = 6;
+}
+
+message ListEventsResponse {
+  repeated EventGrpcModel Events = 1;  // newest first
+  int64 Total = 2;
+}
+
+// Totals per event name; an unset filter matches every event.
+message GetEventCountsRequest {
+  optional string ClientId = 1;
+  optional int64 From = 2;      // created at or after
+  optional int64 To = 3;        // created before
+}
+
+message EventCountGrpcModel {
+  string Event = 1;
+  int64 Count = 2;
+  int64 Clients = 3;            // distinct clients
+  int64 LastAt = 4;
+}
+
+message GetEventCountsResponse {
+  repeated EventCountGrpcModel Counts = 1;  // most frequent first
+}
+
 service AcademyFeaturesGrpcService {
   rpc ListFeatures(google.protobuf.Empty) returns (ListFeaturesResponse);
   rpc SetFeatureEnabled(SetFeatureEnabledRequest) returns (FeatureUpdateResponse);
@@ -354,6 +396,8 @@ service AcademyFeaturesGrpcService {
   rpc ListClientProducts(ListClientProductsRequest) returns (ListClientProductsResponse);
 
   rpc TrackEvent(TrackEventRequest) returns (TrackEventResponse);
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
+  rpc GetEventCounts(GetEventCountsRequest) returns (GetEventCountsResponse);
 
   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
