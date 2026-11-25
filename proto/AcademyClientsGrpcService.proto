@@ -11,6 +11,12 @@ message AcademyClientGrpcModel {
   optional string ExternalId = 6;
   optional string FirstName = 7;
   optional string LastName = 8;
+  // Where the client came from, as web2wave recorded it at sign-up.
+  optional string UtmSource = 9;
+  optional string UtmMedium = 10;
+  optional string UtmCampaign = 11;
+  optional string UtmContent = 12;
+  optional string UtmTerm = 13;
 }
 
 message CreateClientIfNotExistsRequest {

@@ -321,6 +321,7 @@ message TrackEventRequest {
   string Event = 2;             // lowercase letters, digits and _
   string Params = 3;            // JSON object; empty for none
   optional string Country = 4;  // ISO 3166-1 alpha-2 of the request
+  optional string Id = 5;       // idempotency key: an event whose id is stored is skipped
 }
 
 message TrackEventResponse {
