@@ -129,6 +129,7 @@ message GetRegistrationsDailyRequest {
 message RegistrationsDayGrpcModel {
   int32 Day = 1;                // YYYYMMDD (UTC)
   int64 Registered = 2;
+  int64 WithPassword = 3;       // of them, with a password set now
 }
 
 // Days with at least one registration, oldest first.
