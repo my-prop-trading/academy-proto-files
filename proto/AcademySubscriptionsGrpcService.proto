@@ -6,7 +6,12 @@ enum AcademySubscriptionStatusGrpc {
   ACTIVE = 0;
   SUSPENDED = 1;
   CANCELLED = 2;
-  BLOCKED = 3;
+  // Recurring charge failed; the provider keeps retrying it.
+  REDEMPTION = 3;
+  // First charge not confirmed yet.
+  PENDING = 4;
+  // First charge never succeeded; the subscription never became active.
+  EXPIRED = 5;
 }
 
 // Existing rows pre-migration are PROVIDER_UNSPECIFIED (= 0), treated as Billerix
@@ -118,8 +123,10 @@ message GetSubscriptionsStatsResponse {
   int64 Active = 2;
   int64 Suspended = 3;
   int64 Cancelled = 4;
-  int64 Blocked = 5;
+  int64 Redemption = 5;
   repeated ActiveAmountGrpcModel ActiveAmounts = 6;
+  int64 Pending = 7;
+  int64 Expired = 8;
 }
 
 message GetLatestByClientIdsRequest {
